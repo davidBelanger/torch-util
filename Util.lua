@@ -10,6 +10,20 @@ function Util:loadMap(file)
 	return map
 end
 
+function Util:loadReverseMap(file)
+	print(string.format('reading from %s',file))
+	local map = {}
+	local cnt = 0
+	for s in io.lines(file) do
+		table[s] = cnt
+		cnt = cnt+1
+	end
+	return map
+end
+
+
+
+
 
 function Util:mapLookup(ints,map)
 	local out = {}
