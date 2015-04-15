@@ -15,7 +15,7 @@ function Util:loadReverseMap(file)
 	local map = {}
 	local cnt = 0
 	for s in io.lines(file) do
-		table[s] = cnt
+		map[s] = cnt
 		cnt = cnt+1
 	end
 	return map
