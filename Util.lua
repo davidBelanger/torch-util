@@ -13,7 +13,7 @@ end
 function Util:loadReverseMap(file)
 	print(string.format('reading from %s',file))
 	local map = {}
-	local cnt = 0
+	local cnt = 1
 	for s in io.lines(file) do
 		map[s] = cnt
 		cnt = cnt+1
