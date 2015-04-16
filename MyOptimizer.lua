@@ -9,12 +9,15 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
 	 assert(optInfo)
 	 self.model = model
      self.model_to_update = submodel_to_update
-     self.l2 = optInfo.l2
 	 self.optState = optInfo.optState	
      self.optConfig = optInfo.optConfig
      self.optimMethod = optInfo.optimMethod
+     self.regularization = optInfo.regularization
      self.trainingOptions = trainingOptions 
      self.totalError = torch.Tensor(1):zero()
+     self.checkForConvergence = optInfo.converged ~= nil
+     self.optInfo = optInfo
+    
      if(optInfo.useCuda) then
         self.totalError:cuda()
     end
@@ -35,7 +38,9 @@ function MyOptimizer:train(batchSampler)
      local batchesPerEpoch = self.trainingOptions.batchesPerEpoch
      local epochSize = batchesPerEpoch*batchSampler():size(1)
      local numProcessed = 0
-	 for i=1,self.trainingOptions.numEpochs do
+     
+    local i = 1
+    while i < self.trainingOptions.numEpochs and (not self.checkForConvergence or not self.optInfo.converged) do
         self.totalError:zero()
         for j = 1,batchesPerEpoch do
 	     local minibatch_targets,minibatch_inputs = batchSampler()
@@ -59,6 +64,7 @@ function MyOptimizer:train(batchSampler)
                 hook.hook(i)
             end
 	   end
+       i = i + 1
     end
 end
 
@@ -79,8 +85,12 @@ function MyOptimizer:trainBatch(inputs, targets)
         self.totalError[1] = self.totalError[1] + err
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
-        gradParameters:add(self.l2,parameters)
-
+        for i = 1,#self.regularization.params do
+            local params,grad = self.regularization.params[i]:getParameters()
+            local l2 = self.regularization.l2[i]
+            grad:add(l2,params)    
+        end
+        
         return err, gradParameters
     end
 
