@@ -17,6 +17,20 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
      self.totalError = torch.Tensor(1):zero()
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
+
+     self.l2s = {}
+     self.params = {}
+     self.grads = {}
+
+    for i = 1,#self.regularization.params do
+            local params,grad = self.regularization.params[i]:getParameters()
+            local l2 = self.regularization.l2[i]
+            table.insert(self.params,params)
+            table.insert(self.grads,grad)
+            table.insert(self.l2s,l2)
+    end
+    self.numRegularizers = #self.l2s
+
     
      if(optInfo.useCuda) then
         self.totalError:cuda()
@@ -85,10 +99,8 @@ function MyOptimizer:trainBatch(inputs, targets)
         self.totalError[1] = self.totalError[1] + err
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
-        for i = 1,#self.regularization.params do
-            local params,grad = self.regularization.params[i]:getParameters()
-            local l2 = self.regularization.l2[i]
-            grad:add(l2,params)    
+        for i = 1,self.numRegularizers do
+            self.grads[i]:add(self.params[i],self.l2s[i])
         end
         
         return err, gradParameters
