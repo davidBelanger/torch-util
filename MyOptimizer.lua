@@ -95,7 +95,7 @@ function MyOptimizer:trainBatch(inputs, targets)
     assert(inputs)
     assert(targets)
 
-    local parameters self.parameters
+    local parameters = self.parameters
     local gradParameters = self.gradParameters
     
     local function fEval(x)
