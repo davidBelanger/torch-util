@@ -31,6 +31,10 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
     end
     self.numRegularizers = #self.l2s
 
+    local parameters, gradParameters = self.model_to_update:getParameters()   
+    self.parameters = parameters
+    self.gradParameters = gradParameters
+
     
      if(optInfo.useCuda) then
         self.totalError:cuda()
@@ -43,6 +47,8 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
             hook.hook(0)
         end
     end
+
+
 end
 
 --todo: diff weight decay for diff parts of the model and don't weight decay on bias weights
@@ -89,7 +95,8 @@ function MyOptimizer:trainBatch(inputs, targets)
     assert(inputs)
     assert(targets)
 
-    local parameters, gradParameters = self.model_to_update:getParameters()   
+    local parameters self.parameters
+    local gradParameters = self.gradParameters
     
     local function fEval(x)
         if parameters ~= x then parameters:copy(x) end
