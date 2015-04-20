@@ -106,7 +106,11 @@ function MyOptimizer:trainBatch(inputs, targets)
         self.model:backward(inputs, df_do) 
         for i = 1,self.numRegularizers do
             err = err + self.l2s[i]*self.params[i]:norm()
-            self.grads[i]:add(self.params[i],self.l2s[i])
+            print('before = '..gradParameters:norm())
+            self.grads[i]:add(self.l2s[i],self.params[i])
+                        print('after = '..gradParameters:norm())
+                        print()
+
         end
         self.totalError[1] = self.totalError[1] + err
 
