@@ -102,13 +102,14 @@ function MyOptimizer:trainBatch(inputs, targets)
         self.model:zeroGradParameters()
         local output = self.model:forward(inputs)
         local err = self.criterion:forward(output, targets)
-        self.totalError[1] = self.totalError[1] + err
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
         for i = 1,self.numRegularizers do
-            output = output + self.l2s[i]*self.params[i]:norm()
+            err = err + self.l2s[i]*self.params[i]:norm()
             self.grads[i]:add(self.params[i],self.l2s[i])
         end
+        self.totalError[1] = self.totalError[1] + err
+
         
         return err, gradParameters
     end
