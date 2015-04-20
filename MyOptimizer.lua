@@ -97,7 +97,6 @@ function MyOptimizer:trainBatch(inputs, targets)
 
     local parameters = self.parameters
     local gradParameters = self.gradParameters
-    
     local function fEval(x)
         if parameters ~= x then parameters:copy(x) end
         self.model:zeroGradParameters()
@@ -107,6 +106,7 @@ function MyOptimizer:trainBatch(inputs, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
         for i = 1,self.numRegularizers do
+            output = output + self.l2s[i]*self.params[i]:norm()
             self.grads[i]:add(self.params[i],self.l2s[i])
         end
         
