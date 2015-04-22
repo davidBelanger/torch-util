@@ -18,12 +18,17 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
 
-     self.l2s = {}
-     self.params = {}
-     self.grads = {}
 
+
+    local parameters, gradParameters = self.model_to_update:getParameters()   
+    self.parameters = parameters
+    self.gradParameters = gradParameters
+
+    self.l2s = {}
+    self.params = {}
+    self.grads = {}
     for i = 1,#self.regularization.params do
-            local params,grad = self.regularization.params[i]:getParameters()
+            local params,grad = self.regularization.params[i]:parameters()
             local l2 = self.regularization.l2[i]
             table.insert(self.params,params)
             table.insert(self.grads,grad)
@@ -31,9 +36,6 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
     end
     self.numRegularizers = #self.l2s
 
-    local parameters, gradParameters = self.model_to_update:getParameters()   
-    self.parameters = parameters
-    self.gradParameters = gradParameters
 
     
      if(optInfo.useCuda) then
@@ -50,8 +52,6 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
 
 
 end
-
---todo: diff weight decay for diff parts of the model and don't weight decay on bias weights
 
 function MyOptimizer:train(batchSampler)
 	 local prevTime = sys.clock()
@@ -104,22 +104,22 @@ function MyOptimizer:trainBatch(inputs, targets)
         local err = self.criterion:forward(output, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
+      
+        --note we don't bother adding regularizer to the objective calculation. how selects models on the objective anyway?
         for i = 1,self.numRegularizers do
-            err = err + self.l2s[i]*self.params[i]:norm()
-            print('before = '..gradParameters:norm())
-            self.grads[i]:add(self.l2s[i],self.params[i])
-                        print('after = '..gradParameters:norm())
-                        print()
-
+            local l2 = self.l2s[i]
+            for j = 1,#self.params[i] do
+                self.grads[i][j]:add(l2,self.params[i][j])
+            end
         end
-        self.totalError[1] = self.totalError[1] + err
 
+        self.totalError[1] = self.totalError[1] + err
         
         return err, gradParameters
     end
 
-
     self.optimMethod(fEval, parameters, self.optConfig, self.optState)
-    
-    return err, output
+
+
+    return err
 end
