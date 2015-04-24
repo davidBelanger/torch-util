@@ -56,7 +56,8 @@ end
 function MyOptimizer:train(batchSampler)
 	 local prevTime = sys.clock()
      local batchesPerEpoch = self.trainingOptions.batchesPerEpoch
-     local epochSize = batchesPerEpoch*batchSampler():size(1)
+     local tst_lab,tst_data = batchSampler()
+     local epochSize = batchesPerEpoch*tst_data:size(1)
      local numProcessed = 0
      
     local i = 1
