@@ -77,6 +77,7 @@ function MyOptimizer:train(batchSampler)
         prevTime = currTime
 
         print(string.format('\nIter: %d\navg error in epoch = %f\ntotal elapsed = %f\ntime per batch = %f',i,avgError, ElapsedTime,ElapsedTime/batchesPerEpoch))
+        print(string.format('cur learning rate = %f',optConfig.learningRate))
         print(string.format('examples/sec = %f',rate))
 
          for hookIdx = 1,#self.trainingOptions.epochHooks do
