@@ -6,7 +6,6 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda)
 	print(string.format('reading file list from %s',fileList))
 
 	for file in io.lines(fileList) do
-		
 		local batch  = MinibatcherFromFile(file,batchSize,cuda)
 		print('read '..file)
 		table.insert(counts,batch.numRows)

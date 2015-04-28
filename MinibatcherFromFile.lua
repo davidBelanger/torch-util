@@ -6,7 +6,7 @@ function MinibatcherFromFile:__init(file,batchSize,cuda)
 	self.batchSize = batchSize
 
 
-	local loaded = LabeledDataFromFile(file,false,batchSize) 
+	local loaded = LabeledDataFromFile(file,cuda,batchSize) 
 	if(cuda) then
 		self.labels = loaded.labels_pad:cuda()
 		self.data = loaded.inputs_pad:cuda()
@@ -24,6 +24,7 @@ end
 function  MinibatcherFromFile:getBatch()
 	local startIdx = self.curStart
 	local endIdx = startIdx + self.batchSize-1
+	print('batch size = '..self.batchSize)
 	endIdx = math.min(endIdx,self.numRows)
 	self.curStart = endIdx +1
 	if(self.curStart > self.numRows) then
