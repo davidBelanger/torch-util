@@ -1,7 +1,7 @@
 local LabeledDataFromFile = torch.class('LabeledDataFromFile')
 
 function LabeledDataFromFile:__init(file,pad,blocksize)
-	print(string.format('reading from %s',file))
+	print(string.format('reading data from %s',file))
 
 	local loaded = torch.load(file)
 	if(pad) then

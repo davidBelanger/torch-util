@@ -1,20 +1,19 @@
 local MinibatcherFromFileList = torch.class('MinibatcherFromFileList')
 
 function MinibatcherFromFileList:__init(fileList,batchSize,cuda)
-	print('here')
 	self.batches = {}
 	local counts = {}
 	print(string.format('reading file list from %s',fileList))
 
 	for file in io.lines(fileList) do
+		
 		local batch  = MinibatcherFromFile(file,batchSize,cuda)
+		print('read '..file)
 		table.insert(counts,batch.numRows)
 		table.insert(self.batches,batch)
 	end
-
 	self.weights = torch.Tensor(counts)
 	self.weights:div(torch.sum(self.weights))
-
 end
 
 function  MinibatcherFromFileList:getBatch()
