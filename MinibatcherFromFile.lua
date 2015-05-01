@@ -24,7 +24,7 @@ end
 function  MinibatcherFromFile:getBatch()
 	local startIdx = self.curStart
 	local endIdx = startIdx + self.batchSize-1
-	print('batch size = '..self.batchSize)
+
 	endIdx = math.min(endIdx,self.numRows)
 	self.curStart = endIdx +1
 	if(self.curStart > self.numRows) then
