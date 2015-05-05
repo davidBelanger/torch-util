@@ -7,6 +7,8 @@ function MinibatcherFromFile:__init(file,batchSize,cuda)
 
 
 	local loaded = LabeledDataFromFile(file,cuda,batchSize) 
+	self.unpadded_len = loaded.unpadded_len
+
 	if(cuda) then
 		self.labels = loaded.labels_pad:cuda()
 		self.data = loaded.inputs_pad:cuda()
@@ -32,5 +34,9 @@ function  MinibatcherFromFile:getBatch()
 	end
 	local batch_labels = self.labels:narrow(1,startIdx,endIdx-startIdx+1)
 	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
-	return batch_labels,batch_data
+	local num_actual_data = self.batchSize
+	if(endIdx > self.unpadded_len) then
+		num_actual_data = self.unpadded_len - startIdx --todo: this might be off by 1
+	end
+	return batch_labels,batch_data, num_actual_data
 end
