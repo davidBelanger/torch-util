@@ -3,10 +3,11 @@
 
 local MyOptimizer = torch.class('MyOptimizer')
 
-function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,optInfo)
+function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,optInfo,structured)
 	 assert(model)
      assert(trainingOptions)
 	 assert(optInfo)
+     self.structured = structured or false
 	 self.model = model
      self.model_to_update = submodel_to_update
 	 self.optState = optInfo.optState	
@@ -50,7 +51,17 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
         end
     end
 
-
+    --todo: make a strcutre myOptimizer that extends this class
+    --this is only when used in structured mode
+    if(self.structured) then
+        self.gradientAccumulator = torch.Tensor(self.gradParameters:size())
+        self.fixedUnitGradient = torch.Tensor(minibatchsize,1):fill(-1.0)
+        self.margin = 1.0 --todo: loss-scaled margin?
+        if(optInfo.useCuda) then 
+            self.fixedUnitGradient    = self.fixedUnitGradient:cuda() 
+            self.gradientAccumulator  = self.gradientAccumulator:cuda()
+        end
+    end
 end
 
 function MyOptimizer:train(batchSampler)
@@ -125,3 +136,49 @@ function MyOptimizer:trainBatch(inputs, targets)
 
     return err
 end
+
+
+function MyOptimizer:trainBatchStructured(inputs, targets)
+    assert(inputs)
+    assert(targets)
+
+    local parameters = self.parameters
+    local gradParameters = self.gradParameters
+    local function fEval(x)
+        if parameters ~= x then parameters:copy(x) end
+        self.model:zeroGradParameters()
+
+        --inference does energy *minimization*. The structured hinge loss, which we minimize, is defined over the negative energy
+        --hingelossEnergy = negative mdel energy. 
+
+        local hingelossEnergyOnTarget = -self.model:forward(inputs) 
+        self.model:backward(inputs,self.fixedUnitGradient) --this evaluates the *negative* gradient of the hingelossEnergy. Negative, b/c it appears in the hinge with a neg sign 
+        self.gradientAccumulator:copy(gradParameters)
+        self.model:zeroGradParameters() 
+        local hingelossEnergyInferred = -doInference(inputs) --negate because inference does energy minimization
+        local err = 0
+        --todo: loss-scaled margin?
+        if(hingelossEnergyInferred + self.margin  > hingelossEnergyOnTarget) then
+            self.gradientAccumulator:add(-1,gradParameters) --since inference does gradient-based energy minimization, the gradParameters of the network currently have what we want. 
+            err = hingelossEnergyInferred + self.margin  - hingelossEnergyOnTarget 
+        end
+
+        --note we don't bother adding regularizer to the objective calculation. how selects models on the objective anyway?
+        for i = 1,self.numRegularizers do
+            local l2 = self.l2s[i]
+            for j = 1,#self.params[i] do
+                self.grads[i][j]:add(l2,self.params[i][j])
+            end
+        end
+
+        self.totalError[1] = self.totalError[1] + err
+        
+        return err, self.gradientAccumulator
+    end
+
+    self.optimMethod(fEval, parameters, self.optConfig, self.optState)
+
+
+    return err
+end
+
