@@ -8,6 +8,7 @@ function MinibatcherFromFile:__init(file,batchSize,cuda)
 
 	local loaded = LabeledDataFromFile(file,cuda,batchSize) 
 	self.unpadded_len = loaded.unpadded_len
+	assert(self.unpadded_len ~= nil)
 
 	if(cuda) then
 		self.labels = loaded.labels_pad:cuda()

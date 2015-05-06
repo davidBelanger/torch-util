@@ -7,13 +7,13 @@ function LabeledDataFromFile:__init(file,pad,blocksize)
 	if(pad) then
 		self.labels, self.labels_pad = self:padTensor(loaded.labels,blocksize)
 		self.inputs, self.inputs_pad = self:padTensor(loaded.data,blocksize)
-		self.unpadded_len = self.labels:size(1)
 	else
 		self.labels = loaded.labels
 		self.inputs = loaded.data
 		self.labels_pad = self.labels
 		self.inputs_pad = self.inputs
 	end
+	self.unpadded_len = self.labels:size(1)
 end
 
 function LabeledDataFromFile:cuda()
