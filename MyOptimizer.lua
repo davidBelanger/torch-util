@@ -1,10 +1,8 @@
---NOTE: various bits of this code were copied from fbnn Optim.lua 3/5/2015
-
-
 local MyOptimizer = torch.class('MyOptimizer')
+--NOTE: various bits of this code were inspired by fbnn Optim.lua 3/5/2015
 
-function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,optInfo,structured)
-	 assert(model)
+
+function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,optInfo)
      assert(trainingOptions)
 	 assert(optInfo)
      self.structured = structured or false
@@ -18,6 +16,7 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
      self.totalError = torch.Tensor(1):zero()
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
+    self.minibatchsize = trainingOptions.minibatchsize
 
 
 
@@ -38,7 +37,7 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
     self.numRegularizers = #self.l2s
 
 
-    
+    self.cuda = optInfo.cuda
      if(optInfo.useCuda) then
         self.totalError:cuda()
     end
@@ -51,32 +50,21 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
         end
     end
 
-    --todo: make a strcutre myOptimizer that extends this class
-    --this is only when used in structured mode
-    if(self.structured) then
-        self.gradientAccumulator = torch.Tensor(self.gradParameters:size())
-        self.fixedUnitGradient = torch.Tensor(minibatchsize,1):fill(-1.0)
-        self.margin = 1.0 --todo: loss-scaled margin?
-        if(optInfo.useCuda) then 
-            self.fixedUnitGradient    = self.fixedUnitGradient:cuda() 
-            self.gradientAccumulator  = self.gradientAccumulator:cuda()
-        end
-    end
 end
 
 function MyOptimizer:train(batchSampler)
 	 local prevTime = sys.clock()
      local batchesPerEpoch = self.trainingOptions.batchesPerEpoch
      local tst_lab,tst_data = batchSampler()
-     local epochSize = batchesPerEpoch*tst_lab:size(1)
+     local epochSize = batchesPerEpoch*self.minibatchsize
      local numProcessed = 0
      
     local i = 1
     while i < self.trainingOptions.numEpochs and (not self.checkForConvergence or not self.optInfo.converged) do
         self.totalError:zero()
         for j = 1,batchesPerEpoch do
-	     local minibatch_targets,minibatch_inputs = batchSampler()
-	     self:trainBatch(minibatch_inputs,minibatch_targets,criterion) 
+    	    local minibatch_targets,minibatch_inputs = batchSampler()
+            self:trainBatch(minibatch_inputs,minibatch_targets) 
         end
         numProcessed = numProcessed + epochSize
 
@@ -118,7 +106,7 @@ function MyOptimizer:trainBatch(inputs, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
       
-        --note we don't bother adding regularizer to the objective calculation. how selects models on the objective anyway?
+        --note we don't bother adding regularizer to the objective calculation. who selects models on the objective anyway?
         for i = 1,self.numRegularizers do
             local l2 = self.l2s[i]
             for j = 1,#self.params[i] do
@@ -129,51 +117,6 @@ function MyOptimizer:trainBatch(inputs, targets)
         self.totalError[1] = self.totalError[1] + err
         
         return err, gradParameters
-    end
-
-    self.optimMethod(fEval, parameters, self.optConfig, self.optState)
-
-
-    return err
-end
-
-
-function MyOptimizer:trainBatchStructured(inputs, targets)
-    assert(inputs)
-    assert(targets)
-
-    local parameters = self.parameters
-    local gradParameters = self.gradParameters
-    local function fEval(x)
-        if parameters ~= x then parameters:copy(x) end
-        self.model:zeroGradParameters()
-
-        --inference does energy *minimization*. The structured hinge loss, which we minimize, is defined over the negative energy
-        --hingelossEnergy = negative mdel energy. 
-
-        local hingelossEnergyOnTarget = -self.model:forward(inputs) 
-        self.model:backward(inputs,self.fixedUnitGradient) --this evaluates the *negative* gradient of the hingelossEnergy. Negative, b/c it appears in the hinge with a neg sign 
-        self.gradientAccumulator:copy(gradParameters)
-        self.model:zeroGradParameters() 
-        local hingelossEnergyInferred = -doInference(inputs) --negate because inference does energy minimization
-        local err = 0
-        --todo: loss-scaled margin?
-        if(hingelossEnergyInferred + self.margin  > hingelossEnergyOnTarget) then
-            self.gradientAccumulator:add(-1,gradParameters) --since inference does gradient-based energy minimization, the gradParameters of the network currently have what we want. 
-            err = hingelossEnergyInferred + self.margin  - hingelossEnergyOnTarget 
-        end
-
-        --note we don't bother adding regularizer to the objective calculation. how selects models on the objective anyway?
-        for i = 1,self.numRegularizers do
-            local l2 = self.l2s[i]
-            for j = 1,#self.params[i] do
-                self.grads[i][j]:add(l2,self.params[i][j])
-            end
-        end
-
-        self.totalError[1] = self.totalError[1] + err
-        
-        return err, self.gradientAccumulator
     end
 
     self.optimMethod(fEval, parameters, self.optConfig, self.optState)
