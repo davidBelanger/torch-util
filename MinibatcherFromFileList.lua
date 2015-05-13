@@ -38,9 +38,13 @@ end
 
 function MinibatcherFromFileList:getAllBatches()
 	local t = {}
-	for _,b in ipairs(self.batches) do
-		table.insert(t,{b.labels,b.data,b.unpadded_len})
-		if(self.debugMode) then break end
+	if(self.debugMode) then 
+		local x,y,z = self.batches[1]:getBatch()
+		table.insert(t,{x,y,z})
+	else	
+		for _,b in ipairs(self.batches) do
+			table.insert(t,{b.labels,b.data,b.unpadded_len})
+		end
 	end
 	return t
 end
