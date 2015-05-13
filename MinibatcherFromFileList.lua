@@ -3,6 +3,7 @@ local MinibatcherFromFileList = torch.class('MinibatcherFromFileList')
 function MinibatcherFromFileList:__init(fileList,batchSize,cuda)
 	self.batches = {}
 	local counts = {}
+	self.debugMode = false
 	print(string.format('reading file list from %s',fileList))
 
 	for file in io.lines(fileList) do
@@ -20,7 +21,7 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda)
 end
 
 function  MinibatcherFromFileList:getBatch()
-	if(false) then
+	if(self.debugMode) then
 		if(self.called) then
 			return self.debug, self.debug2, self.debug3
 		else
@@ -35,4 +36,11 @@ function  MinibatcherFromFileList:getBatch()
 	return self.batches[idx[1]]:getBatch()
 end
 
-
+function MinibatcherFromFileList:getAllBatches()
+	local t = {}
+	for _,b in ipairs(self.batches) do
+		table.insert(t,{b.labels,b.data,b.unpadded_len})
+		if(self.debugMode) then break end
+	end
+	return t
+end
