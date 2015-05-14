@@ -28,6 +28,7 @@ function  MinibatcherFromFileList:getBatch()
 			local idx = torch.multinomial(self.weights,1)
 			self.debug, self.debug2, self.debug3 = self.batches[idx[1]]:getBatch()
 			self.called = true
+
 			return self.debug,self.debug2, self.debug3
 		end	
 	end
