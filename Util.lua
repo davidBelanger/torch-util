@@ -30,7 +30,13 @@ function Util:loadReverseMap(file)
 end
 
 
-
+function Util:assertNan(x,msg)
+	if(torch.isTensor(x))then
+		assert(x:eq(x):all(),msg)
+	else
+		assert( x == x, msg)
+	end
+end
 
 
 function Util:mapLookup(ints,map)
