@@ -102,6 +102,7 @@ function MyOptimizer:trainBatch(inputs, targets)
         if parameters ~= x then parameters:copy(x) end
         self.model:zeroGradParameters()
         local output = self.model:forward(inputs)
+        print(inputs:max())
         local err = self.criterion:forward(output, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
