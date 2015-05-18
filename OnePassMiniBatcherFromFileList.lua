@@ -2,9 +2,8 @@ local OnePassMiniBatcherFromFileList = torch.class('OnePassMiniBatcherFromFileLi
 
 function OnePassMiniBatcherFromFileList:__init(fileList,batchSize,useCuda,preprocess,debugMode)
 	self.debugMode = debugMode or false
-	self.batcher = MinibatcherFromFileList(fileList,batchSize,useCuda)
+	self.batcher = MinibatcherFromFileList(fileList,batchSize,useCuda,preprocess)
 	self.batcher.debugMode = debugMode
-	self.preprocess = preprocess
 	self.debugMode = debugMode
 	if(not self.debugMode) then
 		self.all_batches = self.batcher:getAllBatches()
@@ -18,13 +17,13 @@ function OnePassMiniBatcherFromFileList:getBatch()
 			local lab,feats,num = self.batcher:getBatch()
 			if(not self.called) then
 				self.called = true
-				return self.preprocess(lab,feats,num)
+				return lab,feats,num
 			end
 	else
 		self.tbi = self.tbi + 1
 		if(self.tbi <= #self.all_batches) then	
 			local lab,feats,num = unpack(self.all_batches[self.tbi])
-			return self.preprocess(lab,feats,num)
+			return lab,feats,num
 		end
 	end
 end

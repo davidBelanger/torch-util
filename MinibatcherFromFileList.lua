@@ -1,9 +1,10 @@
 local MinibatcherFromFileList = torch.class('MinibatcherFromFileList')
 
-function MinibatcherFromFileList:__init(fileList,batchSize,cuda)
+function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess)
 	self.batches = {}
 	local counts = {}
 	self.debugMode = false
+	self.preprocess = preprocess
 	print(string.format('reading file list from %s',fileList))
 
 	for file in io.lines(fileList) do
@@ -26,7 +27,7 @@ function  MinibatcherFromFileList:getBatch()
 			return self.debug, self.debug2, self.debug3
 		else
 			local idx = torch.multinomial(self.weights,1)
-			self.debug, self.debug2, self.debug3 = self.batches[idx[1]]:getBatch()
+			self.debug, self.debug2, self.debug3 = preprocess(self.batches[idx[1]]:getBatch())
 			self.called = true
 
 			return self.debug,self.debug2, self.debug3
@@ -34,17 +35,17 @@ function  MinibatcherFromFileList:getBatch()
 	end
 
 	local idx = torch.multinomial(self.weights,1)
-	return self.batches[idx[1]]:getBatch()
+	return self.preprocess(self.batches[idx[1]]:getBatch())
 end
 
 function MinibatcherFromFileList:getAllBatches()
 	local t = {}
 	if(self.debugMode) then 
-		local x,y,z = self.batches[1]:getBatch()
+		local x,y,z = self.preprocess(self.batches[1]:getBatch())
 		table.insert(t,{x,y,z})
 	else	
 		for _,b in ipairs(self.batches) do
-			table.insert(t,{b.labels,b.data,b.unpadded_len})
+			table.insert(t,self.preprocess{b.labels,b.data,b.unpadded_len})
 		end
 	end
 	return t
