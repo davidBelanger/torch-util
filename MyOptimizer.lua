@@ -20,7 +20,7 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
 
 
 
-    local parameters, gradParameters = self.model_to_update:getParameters()   
+    parameters, gradParameters = self.model_to_update:getParameters()   
     self.parameters = parameters
     self.gradParameters = gradParameters
 
