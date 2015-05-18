@@ -74,7 +74,7 @@ function MyOptimizer:train(batchSampler)
         local rate = numProcessed/ElapsedTime
         numProcessed = 0
         prevTime = currTime
-
+        
         print(string.format('\nIter: %d\navg loss in epoch = %f\ntotal elapsed = %f\ntime per batch = %f',i,avgError, ElapsedTime,ElapsedTime/batchesPerEpoch))
         print(string.format('cur learning rate = %f',self.optConfig.learningRate))
         print(string.format('examples/sec = %f',rate))
