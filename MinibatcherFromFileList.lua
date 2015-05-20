@@ -9,7 +9,6 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess)
 
 	for file in io.lines(fileList) do
 		local batch  = MinibatcherFromFile(file,batchSize,cuda)
-		print('read '..file)
 		table.insert(counts,batch.numRows)
 		table.insert(self.batches,batch)
 	end
@@ -41,11 +40,12 @@ end
 function MinibatcherFromFileList:getAllBatches()
 	local t = {}
 	if(self.debugMode) then 
-		local x,y,z = self.preprocess(self.batches[1]:getBatch())
+		local x,y,z = self.preprocess(unpack(self.batches[1]:getBatch()))
 		table.insert(t,{x,y,z})
 	else	
 		for _,b in ipairs(self.batches) do
-			table.insert(t,self.preprocess{b.labels,b.data,b.unpadded_len})
+			local a,b,c = self.preprocess(b.labels,b.data,b.unpadded_len)
+			table.insert(t,{a,b,c})
 		end
 	end
 	return t

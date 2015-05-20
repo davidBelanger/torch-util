@@ -74,10 +74,10 @@ function MyOptimizer:train(batchSampler)
         local rate = numProcessed/ElapsedTime
         numProcessed = 0
         prevTime = currTime
-        
         print(string.format('\nIter: %d\navg loss in epoch = %f\ntotal elapsed = %f\ntime per batch = %f',i,avgError, ElapsedTime,ElapsedTime/batchesPerEpoch))
         print(string.format('cur learning rate = %f',self.optConfig.learningRate))
         print(string.format('examples/sec = %f',rate))
+        self:postEpoch()
 
          for hookIdx = 1,#self.trainingOptions.epochHooks do
             local hook = self.trainingOptions.epochHooks[hookIdx]
@@ -89,8 +89,9 @@ function MyOptimizer:train(batchSampler)
     end
 end
 
-
-
+function MyOptimizer:postEpoch()
+    --this is to be overriden by children of MyOptimizer
+end
 
 function MyOptimizer:trainBatch(inputs, targets)
     assert(inputs)
@@ -101,8 +102,8 @@ function MyOptimizer:trainBatch(inputs, targets)
     local function fEval(x)
         if parameters ~= x then parameters:copy(x) end
         self.model:zeroGradParameters()
+
         local output = self.model:forward(inputs)
-        print(inputs:max())
         local err = self.criterion:forward(output, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 

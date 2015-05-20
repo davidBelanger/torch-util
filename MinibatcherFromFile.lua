@@ -17,7 +17,7 @@ function MinibatcherFromFile:__init(file,batchSize,cuda)
 		self.labels = loaded.labels_pad
 		self.data = loaded.inputs_pad
 	end
-
+	assert(self.labels:size(1) == self.data:size(1))
 	self.numRows = self.data:size(1)
 	self.curStart = 1
 end
