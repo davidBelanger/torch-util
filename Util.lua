@@ -29,6 +29,11 @@ function Util:loadReverseMap(file)
 	return map
 end
 
+function Util:CopyTable(table)
+	copy = {}
+	for j,x in pairs(table) do copy[j] = x end
+	return copy
+end
 
 function Util:assertNan(x,msg)
 	if(torch.isTensor(x))then
