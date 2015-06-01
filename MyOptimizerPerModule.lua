@@ -4,19 +4,17 @@ local MyOptimizerPerModule,parent = torch.class('MyOptimizerPerModule','MyOptimi
 
 --we're just using optInfo for regularization, etc.
 function MyOptimizerPerModule:__init(model,submodel_to_update,criterion, trainingOptions,optInfo,perModuleOptInfo)
-    assert(optInfo.learningRates)
-    parent:__init(model,submodel_to_update,criterion, trainingOptions,optInfo)
+
+    parent.__init(self,model,submodel_to_update,criterion, trainingOptions,optInfo)
 
     self.optConfigs = {}
     self.optStates = {}
 
     self.paramsPerModule = {}
     self.gradParamsPerModule = {}
-
-
     for i = 1,#perModuleOptInfo do
             local oInfo = perModuleOptInfo[i]
-            local p,g = oInfo.module:parameters()
+            local p,g = oInfo.moduleToOptimize:parameters()
             table.insert(self.paramsPerModule,p)
             table.insert(self.gradParamsPerModule,g)
             table.insert(self.optConfigs,oInfo.optConfig)
@@ -26,7 +24,7 @@ function MyOptimizerPerModule:__init(model,submodel_to_update,criterion, trainin
 
 end
 
-function MyOptimizer:trainBatch(inputs, targets)
+function MyOptimizerPerModule:trainBatch(inputs, targets)
     assert(inputs)
     assert(targets)
 
@@ -56,13 +54,16 @@ function MyOptimizer:trainBatch(inputs, targets)
     end
 
     local err = fEval(parameters)
-    print('num = '..self.numModulesToUpdate)
     for i = 1,self.numModulesToUpdate do
-        local function moduleFEval(x)
-            assert(x == self.paramsPerModule[i])
-            return err,self.gradParamsPerModule[i]
+        local numBlocks = #self.paramsPerModule[i]
+        for j = 1,numBlocks do
+            local function moduleFEval(x)
+                assert(x == self.paramsPerModule[i][j])
+                local grad = self.gradParamsPerModule[i][j]
+                return err,grad
+            end
+            self.optimMethod(moduleFEval, self.paramsPerModule[i][j], self.optConfigs[i], self.optStates[i])
         end
-        self.optimMethod(moduleFEval, self.paramsPerModule[i], self.optConfigs[i], self.optStates[i])
     end
 
     return err
