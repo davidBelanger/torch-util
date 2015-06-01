@@ -16,7 +16,7 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
      self.totalError = torch.Tensor(1):zero()
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
-    self.minibatchsize = trainingOptions.minibatchsize
+     self.minibatchsize = trainingOptions.minibatchsize
 
 
 
