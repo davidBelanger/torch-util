@@ -51,3 +51,15 @@ function Util:mapLookup(ints,map)
 	end
 	return map
 end
+
+function Util:sparse2dense(tl)
+	local ti11 = torch.Tensor(tl:size(1),tl:size(2),params.labelDim)
+	ti11:zero()
+	for i = 1,tl:size(1) do
+		for j = 1,tl:size(2) do
+			local v = tl[i][j]
+			ti11[i][j][v] = 1
+		end
+	end
+	return convert(ti11)
+end

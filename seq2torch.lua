@@ -9,7 +9,7 @@ model, load from one of these files at a time, so that the examples in your mini
 71      1 117 2497 789 4 2
 80      1 9 2838 2087 91 2
 43      1 26 12208 8043 120 2
-52      1 783 12208 4 5 2
+52      1 783 12208 4 5 2yst
 48      1 2454 84 27 1162 2
 49      1 4 8 24 131 2
 71      1 9 992 148 4 2
