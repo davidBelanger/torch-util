@@ -19,7 +19,6 @@ function MyOptimizer:__init(model,submodel_to_update,criterion, trainingOptions,
      self.minibatchsize = trainingOptions.minibatchsize
 
 
-
     parameters, gradParameters = self.model_to_update:getParameters()   
     self.parameters = parameters
     self.gradParameters = gradParameters
@@ -107,7 +106,7 @@ function MyOptimizer:trainBatch(inputs, targets)
         local err = self.criterion:forward(output, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
-      
+
         --note we don't bother adding regularizer to the objective calculation. who selects models on the objective anyway?
         for i = 1,self.numRegularizers do
             local l2 = self.l2s[i]

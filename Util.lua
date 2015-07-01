@@ -53,12 +53,20 @@ function Util:mapLookup(ints,map)
 end
 
 --TODO: could this be improved by allocating ti11 on as a cuda tensor at the beginning?
-function Util:sparse2dense(tl,labelDim,useCuda)
-	local ti11 = torch.Tensor(tl:size(1),tl:size(2),labelDim)
+function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for the common use case that we pass it zero-indexed values
+	local ti11 = nil
+	local shift = shift or false
+
+	if(useCuda) then
+		ti11 = torch.CudaTensor(tl:size(1),tl:size(2),labelDim)
+	else
+		ti11 = torch.Tensor(tl:size(1),tl:size(2),labelDim)
+	end
 	ti11:zero()
 	for i = 1,tl:size(1) do
 		for j = 1,tl:size(2) do
 			local v = tl[i][j]
+			if(shift) then v = v+1 end
 			ti11[i][j][v] = 1
 		end
 	end

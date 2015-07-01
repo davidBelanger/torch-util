@@ -1,10 +1,13 @@
 local MinibatcherFromFileList = torch.class('MinibatcherFromFileList')
 
 function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess)
+	if(not preprocess) then
+		preprocess = function(a,b,c) return a,b,c end
+	end
+	self.preprocess = preprocess
 	self.batches = {}
 	local counts = {}
 	self.debugMode = false
-	self.preprocess = preprocess
 	print(string.format('reading file list from %s',fileList))
 
 	for file in io.lines(fileList) do
