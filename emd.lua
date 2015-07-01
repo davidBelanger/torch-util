@@ -20,6 +20,7 @@ ARGS:
 - `config.nesterov`          : enables Nesterov momentum
 - `config.logSpace`          : whether to do normalization in logspace (default value is true)
 - `config.checkNans`         : whether to check for overflow/nans. (default is true) Adds a bit of expense, but turn off at your own risk. 
+- `config.learningRatePower` : lr = 1/pow(1 + num_evals*learningRateDecay,learningRatePower) 
 - `config.extraEntropyWeight`: suppose you're actually minimizing opfunc(x) + (extraEntropyWeight)*entropy(x). 
    --this option allows you to analytically handle the second term without explicitly accounting for it in opfunc. 
    --Because entropic mirror descent uses the entropy as a mirror map, accounting for this amounts to nothing more 
@@ -46,6 +47,7 @@ function optim.emd(opfunc, x, config, state)
    local logSpace = config.logSpace or true
    local extraEntropyWeight = config.extraEntropyWeight
    local checkNans = config.checkNans or true
+   local learningRatePower = config.learningRatePower or 1
 
    local useTemp = config.extraEntropyWeight and config.extraEntropyWeight > 0.0 
    state.evalCounter = state.evalCounter or 0
@@ -81,7 +83,7 @@ function optim.emd(opfunc, x, config, state)
    end
 
    -- (4) learning rate decay (annealing)
-   local clr = lr / (1 + nevals*lrd)
+   local clr = lr / math.pow(1 + nevals*lrd,learningRatePower)
    
 
    if(not logSpace) then
