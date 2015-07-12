@@ -1,12 +1,18 @@
 local Util = torch.class('Util')
 
-function Util:splitByDelim(str,delim)
-      local t = {}
-      local pattern = '([^'..delim..']+)'
-      for word in string.gmatch(str, pattern) do
-      table.insert(t,word)
-      end
-      return t
+function Util:splitByDelim(str,delim,,convertFromString)
+	local convertFromString = convertFromString or false
+
+	local function convert(input)
+		if(convertFromString) then  return tonumber(input)  else return input end
+	end
+
+    local t = {}
+    local pattern = '([^'..delim..']+)'
+    for word in string.gmatch(str, pattern) do
+     	table.insert(t,convert(word))
+    end
+    return t
 end
 
 function Util:loadMap(file)
@@ -43,6 +49,61 @@ function Util:assertNan(x,msg)
 	end
 end
 
+--This assumes that the inputs are regularly sized. It accepts inputs of dimension 1 or 2
+--TODO: it's possible that there's a more efficient way to do this using something in torch
+
+--the second argument is for a common use case that the tensor contains strings rather than int values
+function Util:table2tensor(tab)
+
+	local function threeDtable2tensor(tab)
+		local s1 = #tab
+		local s2 = #tab[1]
+		local s3 = #tab[1][1]
+
+		local tensor = torch.Tensor(s1,s2,s3)
+		for i = 1,s1 do
+			assert(#tab[s1] == s2,"input tensor is expected to have the same number of elements in each dim. issue in dim 2.")
+			for j = 1,s2 do 
+				assert(#tab[s2] == s3,"input tensor is expected to have the same number of elements in each dim. isssue in dim 3.")
+				for k = 1,s3 do 	
+					tensor[i][j][k] = tab[i][j][k]
+				end
+			end
+		end
+	end
+
+	local function twoDtable2tensor(tab)
+		local s1 = #tab
+		local s2 = #tab[1]
+		local tensor = torch.Tensor(s1,s2)
+		for i = 1,s1 do
+			assert(#tab[s1] == s2,"input tensor is expected to have the same number of elements in each row")
+			for j = 1,s2 do 
+				tensor[i][j] = tab[i][j]
+			end
+		end
+	end
+
+	local function oneDtable2tensor(tab)
+		local s1 = #tab
+		local tensor = torch.Tensor(s1)
+		for i = 1,s1 do
+			tensor[i] = tab[i]
+		end
+	end
+
+
+
+	if(torch.isTensor(tab[1])) then
+		if(torch.isTensor(tab[2])) then
+			return threeDtable2tensor(tab)
+		else
+			return twoDtable2tensor(tab)
+		end
+	else
+		return oneDtable2tensor(tab)
+	end
+end
 
 function Util:mapLookup(ints,map)
 	local out = {}
@@ -72,3 +133,6 @@ function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for th
 	end
 	if(not useCuda)then  return ti11 else return ti11:cuda() end
 end
+
+
+
