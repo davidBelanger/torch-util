@@ -21,6 +21,10 @@ To massage your data into this form, you can take two approaches:
 1) In a preprocessing script, pad your sentences with dummy tokens so that they're all the same length. 
 2) Move your corpus around so that there is one file per possible sentence length, and call this conversion script on each file. Then, when training your downstream
 model, load from one of these files at a time, so that the examples in your minibatch are all of the same size. 
+
+
+** When using token labels, this script does not require that for each sentence the number of labels and the number of input tokens is the same. 
+Sometimes, such as when using conv nets, one must pad the inputs to be of a minimum size, so this will make the inputs bigger than the labels.
 --]]
 
 require 'torch'
@@ -29,14 +33,14 @@ cmd = torch.CmdLine()
 cmd:option('-input','','input file')
 cmd:option('-output','','out')
 cmd:option('-tokenLabels',0,'whether the labels are at the token level (alternative: a single label for the whole sequence)')
-cmd:option('-tokenFeats',0,'whether each token has features (alternative: just a single int index into vocab)')
+cmd:option('-tokenFeatures',0,'whether each token has features (alternative: just a single int index into vocab)')
 
 
 local params = cmd:parse(arg)
 local expectedLen = params.len
 local outFile = params.output
 local useTokenLabels = params.tokenLabels == 1
-local useTokenFeats = params.tokenFeats == 1
+local useTokenFeats = params.tokenFeatures == 1
 
 local intLabels = {}
 local intInputs = {}
@@ -69,10 +73,6 @@ print(string.format('num input lines = %d',#intLabels))
 local labels = Util:table2tensor(intLabels)
 local data = Util:table2tensor(intInputs) --internally, this asserts that every input sentence is of the same length and there are the same # of features per token
 
-
-if(useTokenLabels) then 
-	assert(labels:size(2) == data:size(2))
-end
 
 local out = {
 	labels = labels,

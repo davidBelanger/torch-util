@@ -49,10 +49,8 @@ function Util:assertNan(x,msg)
 	end
 end
 
---This assumes that the inputs are regularly sized. It accepts inputs of dimension 1 or 2
+--This assumes that the inputs are regularly sized. It accepts inputs of dimension 1,2, or 3
 --TODO: it's possible that there's a more efficient way to do this using something in torch
-
---the second argument is for a common use case that the tensor contains strings rather than int values
 function Util:table2tensor(tab)
 
 	local function threeDtable2tensor(tab)
