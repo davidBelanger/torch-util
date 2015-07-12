@@ -1,6 +1,11 @@
---[[this takes a file where each line is a sentence. The first int is a class label for the sentence. Example lines below.
-Then, there is a tab, then there is a space-separated list of word indices for the sentence. 
-This script expects that each sentence is of the same length. 
+--[[
+This takes a file where each line is a sentence. Example lines below. 
+
+The first int is a class label for the sentence. 
+Then, there is a tab. 
+Then there is a space-separated list of word indices for the sentence. 
+
+***This script expects that each sentence is of the same length. 
 To massage your data into this form, you can take two approaches:
 1) In a preprocessing script, pad your sentences with dummy tokens so that they're all the same length. 
 2) Move your corpus around so that there is one file per possible sentence length, and call this conversion script on each file. Then, when training your downstream
