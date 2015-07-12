@@ -3,21 +3,6 @@ import fileinput
 
 
 
-#todo: make a feature templates object 
-#todo: make a feature template object
-
-API: 
-loadDomains(outBase)
-writeDomains(outBase)
-increment(stringFeatures)
-constructDomains()
-convertToInt(stringFeatures)
-extractFeatures(tokenString)
-
-
-#this extracts per-token features. it returns a function to be applied to a token string
-
-
 #you may want to change this
 def tokenize(sentence):
 	strings = sentence.split(" ")
@@ -50,7 +35,7 @@ def main():
 		stringFeatures = featureTemplates.extractFeatures(toks)
 		if(not makeDomain):
 			intFeatures = featureTemplates.convertToInt(stringFeatures)
-			print "{0}\t{1}".format(label,convertFeaturesForPrinting(intFeatures))
+			print "{0}\t{1}".format(label,featureTemplates.convertFeaturesForPrinting(intFeatures))
 		else:
 			featureDomains.increment(stringFeatures)
 
@@ -63,15 +48,30 @@ def main():
 
 
 
-
-
-
-
-
+#todo: make a feature templates object 
+#todo: make a feature template object
+#todo: make sure it 
+API: 
+loadDomains(outBase)
+writeDomains(outBase)
+increment(stringFeatures)
+constructDomains()
+convertToInt(stringFeatures)
+extractFeatures(tokenString)
 
 #this converts the mapped features so that they can be written out
+todo: this should be a method on featureTemplates
 def convertFeaturesForPrinting(sentenceFeatures):
-	return " ".join(map(lambda x: ",".join(x),sentenceFeatures)
+	if(not tokenFeatures):
+		return " ".join(map(lambda x: x[0],sentenceFeatures)
+	else:
+		return " ".join(map(lambda x: ",".join(x),sentenceFeatures)
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
