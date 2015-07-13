@@ -75,8 +75,9 @@ class FeatureTemplate:
 
 
 	def constructDomain(self,featureCountThreshold):
-		keys =  sorted({k: v for k, v in self.counts.iteritems() if v > featureCountThreshold},key=lambda x: x[1])
-		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate(keys)))
+		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
+		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1))
+		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
 		self.domain[defaultValue] = len(self.domain) + 1
 
 	def convertToInt(self,feat):

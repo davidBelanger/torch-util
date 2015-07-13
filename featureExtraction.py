@@ -42,7 +42,11 @@ def main():
 
 	makeDomain = args.makeDomain
 
-	featureTemplateFunctions = [TokenString(),Capitalized()]
+	featureTemplateFunctions = [TokenString()]
+	if(args.tokenFeatures):
+		featureTemplateFunctions.append(Capitalized())
+		#todo: add more, and use featureTemplateNames...
+		
 	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
 	if(not makeDomain):
 		featureTemplates.loadDomains(args.domain)
