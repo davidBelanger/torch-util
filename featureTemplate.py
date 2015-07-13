@@ -2,9 +2,12 @@ from collections import defaultdict
 import operator
 import json
 
-defaultValue = "#UNK"
 
-
+nlpFeatureConstants = {
+	"oov" : "#UNK",
+	"padleft" : "#PadLeft"  ,
+	"padright" : "#PadRight"  
+}
 
 ##***this leaves self.featureFunction as abstract. when creating instances of FeatureTemplate, implement this
 ##**it's also expected that you proved a string self.name
@@ -35,13 +38,13 @@ class FeatureTemplate:
 		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
 		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
 		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
-		self.domain[defaultValue] = len(self.domain) + 1
+		self.domain[nlpFeatureConstants["oov"]] = len(self.domain) + 1
 
 	def convertToInt(self,feat):
 		if(feat in self.domain):
 			return self.domain[feat]
 		else:
-			return self.domain[defaultValue]
+			return self.domain[nlpFeatureConstants["oov"]]
 
 
 
