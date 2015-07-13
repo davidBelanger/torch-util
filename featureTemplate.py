@@ -46,7 +46,7 @@ class FeatureTemplates:
 		if(not self.useFeats):
 			return " ".join(map(lambda x: str(x[0]),sentenceFeatures))
 		else:
-			return " ".join(map(lambda x: ",".join(map(lambda y: str(y),x),sentenceFeatures)))
+			return " ".join(map(lambda x: ",".join(map(lambda y: str(y),x)),sentenceFeatures))
 
 
 class FeatureTemplate:
@@ -76,7 +76,7 @@ class FeatureTemplate:
 
 	def constructDomain(self,featureCountThreshold):
 		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
-		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1))
+		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
 		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
 		self.domain[defaultValue] = len(self.domain) + 1
 
