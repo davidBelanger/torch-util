@@ -1,15 +1,30 @@
 import argparse
 import fileinput
-from collections import defaultdict
-import operator
-import json
+from featureTemplate import * 
 
 
-defaultValue = "#UNK"
-#you may want to change this
+#you may want to change these
 def tokenize(sentence):
 	strings = sentence.split(" ")
 	return strings
+
+def normalize(string):
+	return string #todo: change this
+
+##these are the actual feature templates
+
+class Capitalized(FeatureTemplate):
+	name = 'isCap'
+	def featureFunction(self,normalizedString):
+		if(normalizedString[0].isupper()):
+			return "1"
+		else:
+			return "0"
+
+class TokenString(FeatureTemplate):
+	name = 'tokenString'
+	def featureFunction(self,normalizedString):
+		return normalizedString
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -26,17 +41,19 @@ def main():
 	args = parser.parse_args()
 
 	makeDomain = args.makeDomain
-	featureTemplates = FeatureTemplates(args.tokenFeatures,args.featureTemplates,args.featureCountThreshold)
+
+	featureTemplateFunctions = [TokenString(),Capitalized()]
+	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
 	if(not makeDomain):
-		featureTemplates.loadDomain(args.domain)
+		featureTemplates.loadDomains(args.domain)
 
 	for line in fileinput.input(args.input):
 		fields = line.split("\t")
 		label = fields[0]
 		text = fields[1].rstrip()
 		toks = tokenize(text)
-		print(toks)
-		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), toks)
+		normalizedToks = map(lambda st: normalize(st), toks)
+		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
 		if(not makeDomain):
 			intFeatures = map(lambda tokStringFeats: featureTemplates.convertToInt(tokStringFeats), stringFeatures)
 			print "{0}\t{1}".format(label,featureTemplates.convertFeaturesForPrinting(intFeatures))
@@ -47,105 +64,6 @@ def main():
 		print('writing domain files')
 		featureTemplates.writeDomains(args.domain)
 
-
-
-class FeatureTemplates:
-
-	candidateTemplates = []
-	featureTemplates = []
-	def __init__(self,useTokenFeatures,featureTemplateNames,featureCountThreshold):
-		self.useFeats = useTokenFeatures
-		if(self.useFeats):
-			self.featureTemplateNames = featureTemplateNames.split(",")
-		self.featureCountThreshold = featureCountThreshold
-		self.featureTemplates.append(TokenString())
-
-		#todo: need to use the featureTemplateNames variable
-
-		for d in self.featureTemplates:
-			d.buildCounts = True
-
-	def convertToInt(self,tokStringFeats):
-		return map(lambda x: x[1].convertToInt(x[0]),zip(tokStringFeats,featureTemplates))
-
-
-	def loadDomains(self,domainFileBase): 
-		for template in self.featureTemplates:
-			template.loadDomain(domainFileBase + "." + template.name)
-
-
-	def writeDomains(self,domainFileBase): 
-		for template in self.featureTemplates:
-			template.writeDomain(domainFileBase + "." + template.name)
-
-	def constructDomains(self):
-		for d in self.featureTemplates:
-			d.constructDomain(self.featureCountThreshold)
-			d.buildCounts = False
-
-	def extractFeatures(self,tokenString):
-		normalizedString = tokenString #todo: change
-		return map(lambda x: x.extractFeature(normalizedString),self.featureTemplates)
-
-
-	def convertFeaturesForPrinting(self,sentenceFeatures):
-		if(not useFeats):
-			return " ".join(map(lambda x: x[0],sentenceFeatures))
-		else:
-			return " ".join(map(lambda x: ",".join(x),sentenceFeatures))
-
-
-class FeatureTemplate:
-
-	def __init__(self):
-		self.buildCounts = True
-		self.counts = defaultdict(int)
-		self.domain = None
-
-	def extractFeature(self,normalizedString):
-		feat = self.featureFunction(normalizedString)
-		print feat
-		if(self.buildCounts):
-			self.counts[feat]+= 1 
-		return feat
-
-
-
-	def writeDomain(self,file):
-		data = {
-			'name':self.name,
-			'domain' : self.domain
-		}
-		with open(file, 'w') as outfile:
-   			json.dump(data, outfile)
-
-
-
-	def constructDomain(self,featureCountThreshold):
-		keys =  sorted({k: v for k, v in self.counts.iteritems() if v > featureCountThreshold},key=lambda x: x[1])
-		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate(keys)))
-		self.domain[defaultValue] = len(self.domain) + 1
-
-	def convertToInt(self,feat):
-		if(feat in self.domain):
-			return self.domain[feat]
-		else:
-			return self.domain[defaultValue]
-
-
-
-	def loadDomain(self,file):
-		with open(file, 'r') as datfile:
-   			data = json.load(datfile)
-   			assert data['name'] == self.name
-    		self.domain = data['domain']
-
-
-##these are the actual feature templates
-class TokenString(FeatureTemplate):
-	name = 'tokenString'
-	def featureFunction(self,normalizedString):
-		return normalizedString
 
 
 if __name__ == "__main__":
