@@ -5,6 +5,7 @@ import operator
 import json
 
 
+defaultValue = "#UNK"
 #you may want to change this
 def tokenize(sentence):
 	strings = sentence.split(" ")
@@ -80,7 +81,7 @@ class FeatureTemplates:
 	def constructDomains(self):
 		for d in self.featureTemplates:
 			d.constructDomain(self.featureCountThreshold)
-			d.buildCounts = false
+			d.buildCounts = False
 
 	def extractFeatures(self,tokenString):
 		normalizedString = tokenString #todo: change
@@ -95,11 +96,11 @@ class FeatureTemplates:
 
 
 class FeatureTemplate:
+
 	def __init__(self):
 		self.buildCounts = True
 		self.counts = defaultdict(int)
 		self.domain = None
-
 
 	def extractFeature(self,normalizedString):
 		feat = self.featureFunction(normalizedString)
@@ -112,8 +113,8 @@ class FeatureTemplate:
 
 	def writeDomain(self,file):
 		data = {
-			name:self.name,
-			domain : self.domain
+			'name':self.name,
+			'domain' : self.domain
 		}
 		with open(file, 'w') as outfile:
    			json.dump(data, outfile)
@@ -121,23 +122,23 @@ class FeatureTemplate:
 
 
 	def constructDomain(self,featureCountThreshold):
-		self.domain =  sorted({k: v for k, v in self.counts.iteritems() if v > featureCountThreshold},key=lambda x: x[1])
+		keys =  sorted({k: v for k, v in self.counts.iteritems() if v > featureCountThreshold},key=lambda x: x[1])
+		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate(keys)))
 		self.domain[defaultValue] = len(self.domain) + 1
 
-
-    def convertToInt(self,feat):
-    	if(feat in self.domain):
-    		return self.domain[feat]
-    	else:
-    		return self.domain[defaultValue]
+	def convertToInt(self,feat):
+		if(feat in self.domain):
+			return self.domain[feat]
+		else:
+			return self.domain[defaultValue]
 
 
 
 	def loadDomain(self,file):
 		with open(file, 'r') as datfile:
    			data = json.load(datfile)
-   			assert data.name == self.name
-    		self.domain = data.domain
+   			assert data['name'] == self.name
+    		self.domain = data['domain']
 
 
 ##these are the actual feature templates
