@@ -5,6 +5,55 @@ import json
 defaultValue = "#UNK"
 
 
+
+##***this leaves self.featureFunction as abstract. when creating instances of FeatureTemplate, implement this
+##**it's also expected that you proved a string self.name
+
+class FeatureTemplate:
+
+	def __init__(self):
+		self.buildCounts = True
+		self.counts = defaultdict(int)
+		self.domain = None
+
+	def extractFeature(self,normalizedString):
+		feat = self.featureFunction(normalizedString)
+		if(self.buildCounts):
+			self.counts[feat]+= 1 
+		return feat
+
+	def writeDomain(self,file):
+		data = {
+			'name':self.name,
+			'domain' : self.domain
+		}
+		with open(file, 'w') as outfile:
+   			json.dump(data, outfile)
+
+
+	def constructDomain(self,featureCountThreshold):
+		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
+		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
+		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
+		self.domain[defaultValue] = len(self.domain) + 1
+
+	def convertToInt(self,feat):
+		if(feat in self.domain):
+			return self.domain[feat]
+		else:
+			return self.domain[defaultValue]
+
+
+
+	def loadDomain(self,file):
+		with open(file, 'r') as datfile:
+   			data = json.load(datfile)
+   			assert data['name'] == self.name
+    		self.domain = data['domain']
+
+
+
+
 class FeatureTemplates:
 
 
@@ -47,53 +96,5 @@ class FeatureTemplates:
 			return " ".join(map(lambda x: str(x[0]),sentenceFeatures))
 		else:
 			return " ".join(map(lambda x: ",".join(map(lambda y: str(y),x)),sentenceFeatures))
-
-
-class FeatureTemplate:
-
-	def __init__(self):
-		self.buildCounts = True
-		self.counts = defaultdict(int)
-		self.domain = None
-
-	def extractFeature(self,normalizedString):
-		feat = self.featureFunction(normalizedString)
-		if(self.buildCounts):
-			self.counts[feat]+= 1 
-		return feat
-
-
-
-	def writeDomain(self,file):
-		data = {
-			'name':self.name,
-			'domain' : self.domain
-		}
-		with open(file, 'w') as outfile:
-   			json.dump(data, outfile)
-
-
-
-	def constructDomain(self,featureCountThreshold):
-		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
-		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
-		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
-		self.domain[defaultValue] = len(self.domain) + 1
-
-	def convertToInt(self,feat):
-		if(feat in self.domain):
-			return self.domain[feat]
-		else:
-			return self.domain[defaultValue]
-
-
-
-	def loadDomain(self,file):
-		with open(file, 'r') as datfile:
-   			data = json.load(datfile)
-   			assert data['name'] == self.name
-    		self.domain = data['domain']
-
-
 
 
