@@ -11,10 +11,8 @@ featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a
 ##parameters to choose
 featureCountThreshold=5
 minLength=5 #this ensures that the output is at least this many tokens
-lengthRounding=0 #this pads such that every sequence has a length that is a multiple of <lengthRounding> (typically only used on train data)
+lengthRounding=5 #this pads such that every sequence has a length that is a multiple of <lengthRounding> (only used on train data)
 pad=2 #this puts <pad> dummy tokens on each side
-#lengthArgs="-minLength $minLength -lengthRound $lenRound"
-lengthArgs=""
 
 outDir=proc/
 name=debug #name for the expt
@@ -43,13 +41,16 @@ do
 	dataset=`echo $f | cut -d":" -f2`
 	output=$outDir/$dataset.int.all
 
-    lenRound=$lengthRounding
-	#if [ "$dataset" != "train" ]; then
-	#	lenRound=0
-	#fi
+    lenRound=0
+	if [ "$dataset" == "train" ]; then
+		lenRound=$lengthRounding
+	fi
+	lengthArgs="-lengthRound $lenRound"
 
 	echo making features for $dataset
-	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates
+	echo $makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates $lengthArgs
+
+	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates $lengthArgs
 
 	outDirForDataset=$outDir/$dataset
 	outNameForDataset=$outDirForDataset/$dataset-

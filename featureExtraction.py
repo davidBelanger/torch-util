@@ -76,8 +76,6 @@ def getTemplates(tmpltList):
 		elif(re.match(r"Prefix-\d+",name)):
 			num = re.replace(r"Prefix-","",name)
 			templates.append(Prefix(int(num),allowOOV = True))
-
-
 	return templates
 
 def main():
@@ -93,10 +91,9 @@ def main():
 	parser.add_argument("-featureTemplates",type=str,help="comma-separated list of the names of the feature templates to use",default="tokenString,isCap,isNumeric")
 
 	parser.add_argument("-pad",type=int,help="how much to pad the input on each side",default=0)
+	parser.add_argument("-lengthRound",type=int,help="pad such that all token sequences have length that is a multiple of lengthRound")
 	
-	#todo: add these eventually. 
 	#parser.add_argument("-minLength",type=int,help="minimum length of an observation sequence (after padding).")
-	#parser.add_argument("-lengthRound",type=int,help="pad such that all token sequences have length that is a multiple of lengthRound")
 	
 	args = parser.parse_args()
 
@@ -122,6 +119,8 @@ def main():
 		toks = tokenize(text)
 		if(args.pad > 0):
 			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+		if(args.lengthRound > 0):
+			toks = addPaddingForLengthRounding(toks,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
@@ -162,6 +161,19 @@ def writeAsciiDomainInfo(domainFileName,featureTemplates,labelDomain):
 	out = open(fn, 'w')
 	print >> out, str(len(labelDomain.domain))
 	out.close()
+
+def addPaddingForLengthRounding(toks,targetLengthDivider,leftStr,rightStr):
+	length = len(toks)
+	targetLength = length - (length % targetLengthDivider) + targetLengthDivider #this rounds up to the nearest multiple of targetLengthDivider
+
+	addToFront = False
+	while(len(toks) < targetLength):
+		if(addToFront):
+			toks.insert(0,leftStr)
+		else:
+			toks.append(rightStr)	
+		addToFront = not addToFront
+	return toks
 
 def addPadding(toks,pad,leftStr,rightStr):
 	for i in range(0,pad):
