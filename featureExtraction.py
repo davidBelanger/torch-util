@@ -13,7 +13,10 @@ def normalize(string):
 	string = re.sub(num,"#NUM",string)
 	return string 
 
-##these are the actual feature templates
+class TokenString(FeatureTemplate):
+	name = 'tokenString'
+	def featureFunction(self,normalizedString):
+		return normalizedString
 
 class Capitalized(FeatureTemplate):
 	name = 'isCap'
@@ -22,11 +25,6 @@ class Capitalized(FeatureTemplate):
 			return "1"
 		else:
 			return "0"
-
-class TokenString(FeatureTemplate):
-	name = 'tokenString'
-	def featureFunction(self,normalizedString):
-		return normalizedString
 
 class IsNumeric(FeatureTemplate):
 	name = 'isNumeric'
@@ -57,7 +55,26 @@ class Prefix(FeatureTemplate):
 	def featureFunction(self,normalizedString):
 		return normalizedString[0 : min(len(normalizedString),self.width)]
 
+	
 
+def getTemplates(tmpltList):
+	templates = []
+	for name in tmpltList.split(","):
+		if(name == "tokenString"):
+			templates.append(TokenString())
+		elif(name == "isCap"):
+			templates.append(Capitalized())
+		elif(name == "isNumeric"):
+			templates.append(IsNumeric())
+		elif(re.match(r"Suffix-\d+",name)):
+			num = re.replace(r"Suffix-","",name)
+			templates.append(Suffix(int(num)))
+		elif(re.match(r"Prefix-\d+",name)):
+			num = re.replace(r"Prefix-","",name)
+			templates.append(Prefix(int(num)))
+
+
+	return templates
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-input",type=str,help="input")
@@ -66,11 +83,11 @@ def main():
 
 	parser.add_argument("-makeDomain",type=int,help="whether to make domain or to write out int feature files")
 	
-	parser.add_argument("-featureCountThreshold",type=int,help="threshold for considering features")
-	parser.add_argument("-tokenFeatures",type=int,help="whether to use token features")
-	parser.add_argument("-featureTemplates",type=str,help="comma-separated list of the names of the feature templates to use")
+	parser.add_argument("-featureCountThreshold",type=int,help="threshold for considering features",default=0)
+	parser.add_argument("-tokenFeatures",type=int,help="whether to use token features",default=0)
+	parser.add_argument("-featureTemplates",type=str,help="comma-separated list of the names of the feature templates to use",default="tokenString,isCap,isNumeric")
 
-	parser.add_argument("-pad",type=int,help="how much to pad the input on each side")
+	parser.add_argument("-pad",type=int,help="how much to pad the input on each side",default=0)
 	
 	#todo: add these eventually. 
 	#parser.add_argument("-minLength",type=int,help="minimum length of an observation sequence (after padding).")
@@ -80,19 +97,15 @@ def main():
 
 	makeDomain = args.makeDomain
 
-	featureTemplateFunctions = [TokenString()]
-	if(args.tokenFeatures):
-		featureTemplateFunctions.append(Capitalized())
-		featureTemplateFunctions.append(IsNumeric())
-		featureTemplateFunctions.append(Suffix(2))
-		featureTemplateFunctions.append(Prefix(3))
-
-
-		#todo: add more, and use featureTemplateNames...
+	featureTemplateFunctions = getTemplates(args.featureTemplates)
 
 	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
 	if(not makeDomain):
 		featureTemplates.loadDomains(args.domain)
+
+	out = None
+	if(not makeDomain):
+		out = open(args.output, 'w')
 
 	for line in fileinput.input(args.input):
 		fields = line.split("\t")
@@ -101,23 +114,27 @@ def main():
 		toks = tokenize(text)
 		if(args.pad > 0):
 			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
 		
 		if(not makeDomain):
 			intFeatures = map(lambda tokStringFeats: featureTemplates.convertToInt(tokStringFeats), stringFeatures)
-			print "{0}\t{1}".format(label,featureTemplates.convertFeaturesForPrinting(intFeatures))
+			print >> out, "{0}\t{1}".format(label,featureTemplates.convertFeaturesForPrinting(intFeatures))
 
 	if(makeDomain):
 		print("finished processing text. Now constructing domains")
 		featureTemplates.constructDomains()
 		print('writing domain files')
 		featureTemplates.writeDomains(args.domain)
+	else:
+		out.close()
 
 def addPadding(toks,pad,leftStr,rightStr):
 	for i in range(0,pad):
 		toks.insert(0,leftStr)
 		toks.append(rightStr)
+	return toks
 
 if __name__ == "__main__":
     main()

@@ -1,26 +1,28 @@
 ##specifications about the input data
-trainFile=TODO
-devFile=TODO
-testFile=TODO
-tokLabels=TODO #whether the input has labels at the token level (alternative: at the sentence level)
+trainFile=simpleData/train.txt.small
+devFile=simpleData/dev.txt.small
+testFile=simpleData/test.txt.small
+tokLabels=0 #whether the input has labels at the token level (alternative: at the sentence level)
 
 ##specification about features
 tokFeats=1 #whether to use features for each token (alternative: just token string)
-featureTemplates=TODO #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
+featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
 
 ##parameters to choose
 featureCountThreshold=5
 minLength=5 #this ensures that the output is at least this many tokens
 lengthRounding=0 #this pads such that every sequence has a length that is a multiple of <lengthRounding> (typically only used on train data)
 pad=2 #this puts <pad> dummy tokens on each side
+#lengthArgs="-minLength $minLength -lengthRound $lenRound"
+lengthArgs=""
 
-outDir=TODO
-name=TODO #name for the expt
+outDir=proc/
+name=debug #name for the expt
 domainDir=$outDir
-domainName=$domainDir/$name
+domainName=$domainDir/domain-$name
 
 #script paths
-makeFeatures=TODO
+makeFeatures="python featureExtraction.py"
 splitByLength="perl splitByLength.pl"
 
 allFiles="$trainFile:train $devFile:dev $testFile:test"
@@ -29,7 +31,7 @@ allFiles="$trainFile:train $devFile:dev $testFile:test"
 
 ##first, process just the train data, in order to establish string->int mappings for the feature templates
 makeDomain=1
-output=""
+output="/dev/null"
 $makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -pad $pad -domain $domainName -output $output -tokenFeatures $tokFeats -featureTemplates $featureTemplates
 
 
@@ -44,7 +46,7 @@ do
 	if [ "$dataset" != "train" ]; then
 		lenRound=0
 	fi
-	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad -minLength $minLength -lengthRound $lenRound -tokenFeatures $tokFeats -featureTemplates $featureTemplates
+	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates
 
 	outDirForDataset=$outDir/$dataset/
 	mkdir -p $outDirForDataset
