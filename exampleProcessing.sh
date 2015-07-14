@@ -23,7 +23,8 @@ domainName=$domainDir/domain-$name
 
 #script paths
 makeFeatures="python featureExtraction.py"
-splitByLength="perl splitByLength.pl"
+splitByLength="python splitByLength.py"
+int2torch="th int2torch.lua"
 
 allFiles="$trainFile:train $devFile:dev $testFile:test"
 
@@ -43,17 +44,22 @@ do
 	output=$outDir/$dataset.int.all
 
     lenRound=$lengthRounding
-	if [ "$dataset" != "train" ]; then
-		lenRound=0
-	fi
+	#if [ "$dataset" != "train" ]; then
+	#	lenRound=0
+	#fi
+
+	echo making features for $dataset
 	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates
 
-	outDirForDataset=$outDir/$dataset/
+	outDirForDataset=$outDir/$dataset
+	outNameForDataset=$outDirForDataset/$dataset-
 	mkdir -p $outDirForDataset
-	$splitByLength $output $outDirForDataset
+	echo splitting $dataset by length
+	$splitByLength $output $outNameForDataset
 
 	rm -f $outDir/$dataset.list
-	for ff in `find $outDirForDataset -type f ! -size 0` 
+	echo converting $dataset to torch files
+	for ff in $outNameForDataset* 
 	do
 		$int2torch -input $ff -output $ff.torch -tokenLabels $tokLabels -tokenFeatures $tokFeats
 		echo $ff.torch >> $outDir/$dataset.list

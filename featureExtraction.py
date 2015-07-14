@@ -79,6 +79,7 @@ def getTemplates(tmpltList):
 
 
 	return templates
+
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("-input",type=str,help="input")
@@ -141,9 +142,27 @@ def main():
 		featureTemplates.writeDomains(args.domain)
 		labelDomain.constructDomain(0)
 		labelDomain.writeDomain(args.domain + "-label")
+		writeAsciiDomainInfo(args.domain,featureTemplates,labelDomain)
 	else:
 		print "wrote " + args.output
 		out.close()
+
+def writeAsciiDomainInfo(domainFileName,featureTemplates,labelDomain):
+	fn = domainFileName + ".domainSizes.txt"
+	print 'writing observation domain size info ' + fn
+	out = open(fn, 'w')
+	for template in featureTemplates.featureTemplates:
+		name = template.name
+		size = len(template.domain)
+		print >> out, name + "\t" + str(size)
+
+	out.close()
+
+	fn = domainFileName + ".labelDomainSize.txt"
+	print 'writing label domain size info ' + fn
+	out = open(fn, 'w')
+	print >> out, str(len(labelDomain.domain))
+	out.close()
 
 def addPadding(toks,pad,leftStr,rightStr):
 	for i in range(0,pad):

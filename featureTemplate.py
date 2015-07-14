@@ -47,7 +47,7 @@ class FeatureTemplate:
 		if(feat in self.domain):
 			return self.domain[feat]
 		else:
-			assert(not self.assertInDomain, "input value " + feat + " not in domain")
+			assert not self.assertInDomain, "input value " + feat + " not in domain"
 			return self.domain[nlpFeatureConstants["oov"]]
 
 

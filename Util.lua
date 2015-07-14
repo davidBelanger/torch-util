@@ -1,6 +1,6 @@
 local Util = torch.class('Util')
 
-function Util:splitByDelim(str,delim,,convertFromString)
+function Util:splitByDelim(str,delim,convertFromString)
 	local convertFromString = convertFromString or false
 
 	local function convert(input)
@@ -60,9 +60,9 @@ function Util:table2tensor(tab)
 
 		local tensor = torch.Tensor(s1,s2,s3)
 		for i = 1,s1 do
-			assert(#tab[s1] == s2,"input tensor is expected to have the same number of elements in each dim. issue in dim 2.")
+			assert(#tab[i] == s2,"input tensor is expected to have the same number of elements in each dim. issue in dim 2.")
 			for j = 1,s2 do 
-				assert(#tab[s2] == s3,"input tensor is expected to have the same number of elements in each dim. isssue in dim 3.")
+				assert(#tab[i][j] == s3,"input tensor is expected to have the same number of elements in each dim. isssue in dim 3.")
 				for k = 1,s3 do 	
 					tensor[i][j][k] = tab[i][j][k]
 				end
@@ -90,10 +90,12 @@ function Util:table2tensor(tab)
 		end
 	end
 
+	local function isTable(elem)
+		return type(elem) == "table"
+	end
 
-
-	if(torch.isTensor(tab[1])) then
-		if(torch.isTensor(tab[2])) then
+	if(isTable(tab[1])) then
+		if(isTable(tab[1][1])) then
 			return threeDtable2tensor(tab)
 		else
 			return twoDtable2tensor(tab)

@@ -28,7 +28,7 @@ Sometimes, such as when using conv nets, one must pad the inputs to be of a mini
 --]]
 
 require 'torch'
-require 'table2tensor}'
+require 'Util'
 cmd = torch.CmdLine()
 cmd:option('-input','','input file')
 cmd:option('-output','','out')
@@ -47,7 +47,7 @@ local intInputs = {}
 
 
 for line in io.lines(params.input) do
-	local fields = Util:splitByDelim(line,"\t",true)
+	local fields = Util:splitByDelim(line,"\t",false)
 	local labelString = fields[1]
 	local inputString = fields[2]
 	local labels = nil
@@ -56,8 +56,9 @@ for line in io.lines(params.input) do
 	elseif(useTokenLabels) then
 		labels = Util:splitByDelim(labelString,"\t",false)
 	else
-		labels = labelString
+		labels = tonumber(labelString)
 	end
+
 	local inputs = Util:splitByDelim(inputString," ")
 	if(useTokenFeats) then 
 		local newInputs = {}
@@ -68,7 +69,7 @@ for line in io.lines(params.input) do
 	table.insert(intInputs,inputs)
 end
 
-print(string.format('num input lines = %d',#intLabels))
+--print(string.format('num input lines = %d',#intLabels))
 
 local labels = Util:table2tensor(intLabels)
 local data = Util:table2tensor(intInputs) --internally, this asserts that every input sentence is of the same length and there are the same # of features per token
