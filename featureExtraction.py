@@ -37,19 +37,19 @@ class IsNumeric(FeatureTemplate):
 			return "0"
 
 class Suffix(FeatureTemplate):
-	def __init__(self,width):
+	def __init__(self,width,allowOOV):
 		self.width = width
 		self.name = "Suffix-"+str(width)
-		FeatureTemplate.__init__(self)
+		FeatureTemplate.__init__(self,allowOOV)
 
 	def featureFunction(self,normalizedString):
 		return normalizedString[max(0,len(normalizedString) - self.width) : len(normalizedString)]
 
 class Prefix(FeatureTemplate):
-	def __init__(self,width):
+	def __init__(self,width,allowOOV):
 		self.width = width
 		self.name = "Prefix-"+str(width)
-		FeatureTemplate.__init__(self)
+		FeatureTemplate.__init__(self,allowOOV)
 
 
 	def featureFunction(self,normalizedString):
@@ -65,17 +65,17 @@ def getTemplates(tmpltList):
 	templates = []
 	for name in tmpltList.split(","):
 		if(name == "tokenString"):
-			templates.append(TokenString())
+			templates.append(TokenString(allowOOV = True))
 		elif(name == "isCap"):
-			templates.append(Capitalized())
+			templates.append(Capitalized(allowOOV = False))
 		elif(name == "isNumeric"):
-			templates.append(IsNumeric())
+			templates.append(IsNumeric(allowOOV = False))
 		elif(re.match(r"Suffix-\d+",name)):
 			num = re.replace(r"Suffix-","",name)
-			templates.append(Suffix(int(num)))
+			templates.append(Suffix(int(num),allowOOV = True))
 		elif(re.match(r"Prefix-\d+",name)):
 			num = re.replace(r"Prefix-","",name)
-			templates.append(Prefix(int(num)))
+			templates.append(Prefix(int(num),allowOOV = True))
 
 
 	return templates
@@ -105,13 +105,12 @@ def main():
 	featureTemplateFunctions = getTemplates(args.featureTemplates)
 
 	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
-	labelDomain = Label() 
+	labelDomain = Label(allowOOV = False) 
 
 	out = None
 	if(not makeDomain):
 		featureTemplates.loadDomains(args.domain)
 		labelDomain.loadDomain(args.domain + "-label")
-		labelDomain.assertInDomain = True
 		out = open(args.output, 'w')
 	else:
 		labelDomain.buildCounts = True

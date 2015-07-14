@@ -68,6 +68,7 @@ function Util:table2tensor(tab)
 				end
 			end
 		end
+		return tensor
 	end
 
 	local function twoDtable2tensor(tab)
@@ -80,6 +81,7 @@ function Util:table2tensor(tab)
 				tensor[i][j] = tab[i][j]
 			end
 		end
+		return tensor
 	end
 
 	local function oneDtable2tensor(tab)
@@ -88,6 +90,7 @@ function Util:table2tensor(tab)
 		for i = 1,s1 do
 			tensor[i] = tab[i]
 		end
+		return tensor
 	end
 
 	local function isTable(elem)

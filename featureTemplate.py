@@ -14,11 +14,11 @@ nlpFeatureConstants = {
 
 class FeatureTemplate:
 
-	def __init__(self):
+	def __init__(self,allowOOV):
 		self.buildCounts = True
 		self.counts = defaultdict(int)
 		self.domain = None
-		self.assertInDomain = False
+		self.assertInDomain = not allowOOV
 
 	def extractFeature(self,normalizedString):
 		feat = self.featureFunction(normalizedString)
@@ -41,7 +41,8 @@ class FeatureTemplate:
 		filteredKeys = {k: v for k, v in self.counts.iteritems() if v > featureCountThreshold}
 		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
 		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
-		self.domain[nlpFeatureConstants["oov"]] = len(self.domain) + 1
+		if(not self.assertInDomain):
+			self.domain[nlpFeatureConstants["oov"]] = len(self.domain) + 1
 
 	def convertToInt(self,feat):
 		if(feat in self.domain):

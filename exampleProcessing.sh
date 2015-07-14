@@ -5,7 +5,7 @@ testFile=simpleData/test.txt.small
 tokLabels=0 #whether the input has labels at the token level (alternative: at the sentence level)
 
 ##specification about features
-tokFeats=1 #whether to use features for each token (alternative: just token string)
+tokFeats=0 #whether to use features for each token (alternative: just token string)
 featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
 
 ##parameters to choose
@@ -55,13 +55,15 @@ do
 	outNameForDataset=$outDirForDataset/$dataset-
 	mkdir -p $outDirForDataset
 	echo splitting $dataset by length
-	$splitByLength $output $outNameForDataset
+	outSuffix=.int
+	$splitByLength $output $outNameForDataset $outSuffix
 
 	rm -f $outDir/$dataset.list
 	echo converting $dataset to torch files
-	for ff in $outNameForDataset* 
+	for ff in $outNameForDataset*.int 
 	do
-		$int2torch -input $ff -output $ff.torch -tokenLabels $tokLabels -tokenFeatures $tokFeats
+		bn=`echo $ff | sed 's|.int$||'`
+		$int2torch -input $ff -output $bn.torch -tokenLabels $tokLabels -tokenFeatures $tokFeats
 		echo $ff.torch >> $outDir/$dataset.list
 	done
 

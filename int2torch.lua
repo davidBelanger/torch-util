@@ -69,16 +69,12 @@ for line in io.lines(params.input) do
 	table.insert(intInputs,inputs)
 end
 
---print(string.format('num input lines = %d',#intLabels))
-
 local labels = Util:table2tensor(intLabels)
 local data = Util:table2tensor(intInputs) --internally, this asserts that every input sentence is of the same length and there are the same # of features per token
-
 
 local out = {
 	labels = labels,
 	data = data
-
 }
 
 torch.save(outFile,out)
