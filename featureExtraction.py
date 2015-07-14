@@ -55,7 +55,11 @@ class Prefix(FeatureTemplate):
 	def featureFunction(self,normalizedString):
 		return normalizedString[0 : min(len(normalizedString),self.width)]
 
-	
+
+class Label(FeatureTemplate):
+	name = 'label'
+	def featureFunction(self,label):
+		return label
 
 def getTemplates(tmpltList):
 	templates = []
@@ -100,12 +104,16 @@ def main():
 	featureTemplateFunctions = getTemplates(args.featureTemplates)
 
 	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
-	if(not makeDomain):
-		featureTemplates.loadDomains(args.domain)
+	labelDomain = Label() 
 
 	out = None
 	if(not makeDomain):
+		featureTemplates.loadDomains(args.domain)
+		labelDomain.loadDomain(args.domain + "-label")
+		labelDomain.assertInDomain = True
 		out = open(args.output, 'w')
+	else:
+		labelDomain.buildCounts = True
 
 	for line in fileinput.input(args.input):
 		fields = line.split("\t")
@@ -117,17 +125,24 @@ def main():
 
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
-		
+
 		if(not makeDomain):
 			intFeatures = map(lambda tokStringFeats: featureTemplates.convertToInt(tokStringFeats), stringFeatures)
-			print >> out, "{0}\t{1}".format(label,featureTemplates.convertFeaturesForPrinting(intFeatures))
+			intLabel = labelDomain.convertToInt(label)
+			print >> out, "{0}\t{1}".format(intLabel,featureTemplates.convertFeaturesForPrinting(intFeatures))
+		else:
+			labelDomain.extractFeature(label) #this is for adding label to the domain
+
 
 	if(makeDomain):
 		print("finished processing text. Now constructing domains")
 		featureTemplates.constructDomains()
 		print('writing domain files')
 		featureTemplates.writeDomains(args.domain)
+		labelDomain.constructDomain(0)
+		labelDomain.writeDomain(args.domain + "-label")
 	else:
+		print "wrote " + args.output
 		out.close()
 
 def addPadding(toks,pad,leftStr,rightStr):

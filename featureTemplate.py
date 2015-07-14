@@ -18,6 +18,7 @@ class FeatureTemplate:
 		self.buildCounts = True
 		self.counts = defaultdict(int)
 		self.domain = None
+		self.assertInDomain = False
 
 	def extractFeature(self,normalizedString):
 		feat = self.featureFunction(normalizedString)
@@ -26,6 +27,8 @@ class FeatureTemplate:
 		return feat
 
 	def writeDomain(self,file):
+		print "writing: " + file
+
 		data = {
 			'name':self.name,
 			'domain' : self.domain
@@ -44,6 +47,7 @@ class FeatureTemplate:
 		if(feat in self.domain):
 			return self.domain[feat]
 		else:
+			assert(not self.assertInDomain, "input value " + feat + " not in domain")
 			return self.domain[nlpFeatureConstants["oov"]]
 
 
@@ -82,7 +86,6 @@ class FeatureTemplates:
 	def writeDomains(self,domainFileBase): 
 		for template in self.featureTemplates:
 			fn = domainFileBase + "." + template.name
-			print "writing: " + fn
 			template.writeDomain(fn)
 
 	def constructDomains(self):
