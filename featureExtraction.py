@@ -15,6 +15,7 @@ def normalize(string):
 
 class TokenString(FeatureTemplate):
 	name = 'tokenString'
+	skipSpecialChars = False
 	def featureFunction(self,normalizedString):
 		return normalizedString
 
@@ -61,22 +62,25 @@ class Label(FeatureTemplate):
 	def featureFunction(self,label):
 		return label
 
-def getTemplates(tmpltList):
-	templates = []
-	for name in tmpltList.split(","):
-		if(name == "tokenString"):
-			templates.append(TokenString(allowOOV = True))
-		elif(name == "isCap"):
-			templates.append(Capitalized(allowOOV = False))
-		elif(name == "isNumeric"):
-			templates.append(IsNumeric(allowOOV = False))
-		elif(re.match(r"Suffix-\d+",name)):
-			num = re.replace(r"Suffix-","",name)
-			templates.append(Suffix(int(num),allowOOV = True))
-		elif(re.match(r"Prefix-\d+",name)):
-			num = re.replace(r"Prefix-","",name)
-			templates.append(Prefix(int(num),allowOOV = True))
-	return templates
+def getTemplates(args):
+	if(not args.tokenFeatures):
+		return [TokenString(allowOOV = True)]
+	else:
+		templates = []
+		for name in args.featureTemplates.split(","):
+			if(name == "tokenString"):
+				templates.append(TokenString(allowOOV = True))
+			elif(name == "isCap"):
+				templates.append(Capitalized(allowOOV = False))
+			elif(name == "isNumeric"):
+				templates.append(IsNumeric(allowOOV = False))
+			elif(re.match(r"Suffix-\d+",name)):
+				num = re.replace(r"Suffix-","",name)
+				templates.append(Suffix(int(num),allowOOV = True))
+			elif(re.match(r"Prefix-\d+",name)):
+				num = re.replace(r"Prefix-","",name)
+				templates.append(Prefix(int(num),allowOOV = True))
+		return templates
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -99,9 +103,10 @@ def main():
 
 	makeDomain = args.makeDomain
 
-	featureTemplateFunctions = getTemplates(args.featureTemplates)
+	featureTemplateFunctions = getTemplates(args)
 
 	featureTemplates = FeatureTemplates(args.tokenFeatures,featureTemplateFunctions,args.featureCountThreshold)
+
 	labelDomain = Label(allowOOV = False) 
 
 	out = None

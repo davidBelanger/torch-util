@@ -16,8 +16,7 @@ pad=2 #this puts <pad> dummy tokens on each side
 
 outDir=proc/
 name=debug #name for the expt
-domainDir=$outDir
-domainName=$domainDir/domain-$name
+domainName=$outDir/domain
 
 #script paths
 makeFeatures="python featureExtraction.py"
@@ -69,6 +68,7 @@ do
 	done
 
 done
+
 
 
 

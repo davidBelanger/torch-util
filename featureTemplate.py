@@ -1,7 +1,7 @@
 from collections import defaultdict
 import operator
 import json
-
+import re
 
 nlpFeatureConstants = {
 	"oov" : "#UNK",
@@ -14,14 +14,26 @@ nlpFeatureConstants = {
 
 class FeatureTemplate:
 
+	skipSpecialChars = True # the default is to add a special feautre if you see a special character
+	spec = re.compile('^#')
+
+
 	def __init__(self,allowOOV):
 		self.buildCounts = True
 		self.counts = defaultdict(int)
 		self.domain = None
 		self.assertInDomain = not allowOOV
 
+	def isSpecial(self,tokStr):
+		return self.spec.match(tokStr)
+
 	def extractFeature(self,normalizedString):
-		feat = self.featureFunction(normalizedString)
+		feat = None
+		if(self.isSpecial(normalizedString)):
+			feat = "#SpecialChar"
+		else:
+			feat = self.featureFunction(normalizedString)
+	
 		if(self.buildCounts):
 			self.counts[feat]+= 1 
 		return feat
