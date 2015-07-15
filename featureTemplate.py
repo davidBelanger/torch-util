@@ -54,7 +54,7 @@ class FeatureTemplate:
 		sortedKeysByFrequency =  sorted(filteredKeys.items(),key = operator.itemgetter(1),reverse=True)
 		self.domain = dict(map (lambda t: (t[1], t[0]), enumerate( map (lambda x: x[0], sortedKeysByFrequency)))) ##map from key to index
 		if(not self.assertInDomain):
-			self.domain[nlpFeatureConstants["oov"]] = len(self.domain) + 1
+			self.domain[nlpFeatureConstants["oov"]] = len(self.domain)
 
 	def convertToInt(self,feat):
 		if(feat in self.domain):

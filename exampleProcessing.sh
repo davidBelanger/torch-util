@@ -20,6 +20,7 @@ domainName=$outDir/domain
 
 #script paths
 makeFeatures="python featureExtraction.py"
+addOne="-addOne 1" #use this if preprocessing is 0-indexed. set this to the empty string if your preprocessing is 1-indexed.
 splitByLength="python splitByLength.py"
 int2torch="th int2torch.lua"
 
@@ -63,7 +64,7 @@ do
 	for ff in $outNameForDataset*.int 
 	do
 		out=`echo $ff | sed 's|.int$||'`.torch
-		$int2torch -input $ff -output $out -tokenLabels $tokLabels -tokenFeatures $tokFeats
+		$int2torch -input $ff -output $out -tokenLabels $tokLabels -tokenFeatures $tokFeats $addOne
 		echo $out >> $outDir/$dataset.list
 	done
 

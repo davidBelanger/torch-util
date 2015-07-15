@@ -41,7 +41,7 @@ local convWidth = 3
 local net = nn.Sequential()
 
 local embeddingLayer = nn.Sequential()
-embeddingLayer:add(nn.LookupTable(vocabSize,embeddingDim))
+embeddingLayer:add(nn.LookupTable(params.vocabSize,embeddingDim))
 net:add(embeddingLayer)
 
 
@@ -50,9 +50,9 @@ conv_net:add(nn.TemporalConvolution(embeddingDim,embeddingDim,convWidth))
 conv_net:add(nn.ReLU())
 conv_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
 conv_net:add(nn.Max(3))
-conv_net:add(nn.Linear(embeddingDim,2))
+conv_net:add(nn.Linear(embeddingDim,params.labelDim))
 net:add(conv_net)
-net:add(nn.LogSoftMax)
+net:add(nn.LogSoftMax())
 -----------------------------------
 
 local criterion = nn.ClassNLLCriterion()

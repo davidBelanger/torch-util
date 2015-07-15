@@ -156,7 +156,7 @@ def writeAsciiDomainInfo(domainFileName,featureTemplates,labelDomain):
 	out = open(fn, 'w')
 	for template in featureTemplates.featureTemplates:
 		name = template.name
-		size = len(template.domain)
+		size = len(template.domain) 
 		print >> out, name + "\t" + str(size)
 
 	out.close()
