@@ -62,9 +62,9 @@ do
 	echo converting $dataset to torch files
 	for ff in $outNameForDataset*.int 
 	do
-		bn=`echo $ff | sed 's|.int$||'`
-		$int2torch -input $ff -output $bn.torch -tokenLabels $tokLabels -tokenFeatures $tokFeats
-		echo $ff.torch >> $outDir/$dataset.list
+		out=`echo $ff | sed 's|.int$||'`.torch
+		$int2torch -input $ff -output $out -tokenLabels $tokLabels -tokenFeatures $tokFeats
+		echo $out >> $outDir/$dataset.list
 	done
 
 done
