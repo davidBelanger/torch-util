@@ -89,6 +89,8 @@ def main():
 	parser.add_argument("-domain",type=str,help="basename for the domain files")
 
 	parser.add_argument("-makeDomain",type=int,help="whether to make domain or to write out int feature files")
+
+	parser.add_argument("-tokenLabels",type=int,help="whether annotation is at the token level (vs. sentence level)",default=0)
 	
 	parser.add_argument("-featureCountThreshold",type=int,help="threshold for considering features",default=0)
 	parser.add_argument("-tokenFeatures",type=int,help="whether to use token features",default=0)
@@ -117,26 +119,43 @@ def main():
 	else:
 		labelDomain.buildCounts = True
 
+	tokenLabels = args.tokenLabels == 1
 	for line in fileinput.input(args.input):
 		fields = line.split("\t")
-		label = fields[0]
+		labelString = fields[0]
 		text = fields[1].rstrip()
 		toks = tokenize(text)
+
+		labels = None
+		if(tokenLabels): 
+			labels = labelString.split(" ")
 		if(args.pad > 0):
 			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+			if(tokenLabels):
+				labels = addPadding(labels,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+
 		if(args.lengthRound > 0):
 			toks = addPaddingForLengthRounding(toks,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+			if(tokenLabels): 
+				labels = addPaddingForLengthRounding(labels,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+
 
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
 
 		if(not makeDomain):
 			intFeatures = map(lambda tokStringFeats: featureTemplates.convertToInt(tokStringFeats), stringFeatures)
-			intLabel = labelDomain.convertToInt(label)
+			intLabel = None
+			if(tokenLabels):
+				" ".join(map(lambda l: labelDomain.convertToInt(l),labels))
+			else:
+				intLabel = labelDomain.convertToInt(label)
 			print >> out, "{0}\t{1}".format(intLabel,featureTemplates.convertFeaturesForPrinting(intFeatures))
 		else:
-			labelDomain.extractFeature(label) #this is for adding label to the domain
-
+			if(not tokenLabels):
+				labelDomain.extractFeature(labelString) #this is for adding label to the domain
+			else:
+				ff = map(lambda l: labelDomain.extractFeature(l),labels)
 
 	if(makeDomain):
 		print("finished processing text. Now constructing domains")

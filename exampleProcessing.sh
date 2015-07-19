@@ -8,6 +8,7 @@ tokLabels=0 #whether the input has labels at the token level (alternative: at th
 tokFeats=0 #whether to use features for each token (alternative: just token string)
 featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
 
+
 ##parameters to choose
 featureCountThreshold=5
 minLength=5 #this ensures that the output is at least this many tokens
@@ -20,7 +21,7 @@ domainName=$outDir/domain
 
 #script paths
 makeFeatures="python featureExtraction.py"
-addOne="-addOne 1" #use this if preprocessing is 0-indexed. set this to the empty string if your preprocessing is 1-indexed.
+addOne="-addOne 1" #use this if preprocessing is 0-indexed. set this to the empty string if your preprocessing is 1-indexed. (featureExtraction.py is 0-indexed)
 splitByLength="python splitByLength.py"
 int2torch="th int2torch.lua"
 
