@@ -1,6 +1,6 @@
 d=./proc/
 
-lr=0.01
+lr=0.1
 labelDim=`cat $d/domain.labelDomainSize.txt`
 vocabSize=`cat proc/domain.domainSizes.txt  | grep '^tokenString' | cut -f2`
 

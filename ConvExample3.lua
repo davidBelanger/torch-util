@@ -77,7 +77,7 @@ table.insert(regularization.params,conv_net)
 -----------------------------------	
 
 --------Initialize Optimizer-------
-local useMomentum = true
+local momentum = 1.0 
 local dampening = 0.95
 optInfo = {
 	optimMethod = optim.sgd,
