@@ -6,6 +6,7 @@ require 'optim'
 require 'MinibatcherFromFile'
 require 'MinibatcherFromFileList'
 require 'MyOptimizer'
+require 'OptimizerCallback'
 require 'OnePassMiniBatcherFromFileList'
 require 'Util'
 
@@ -97,12 +98,14 @@ optInfo = {
 
 --------Callbacks-------
 callbacks = {}
+tester = OptimizerCallback(2,function (i) print("hello") end, 'test')
+table.insert(callbacks,tester)
 ------------------------
 
 --------Training Options-------
 local trainingOptions = {
-    numEpochs = 1000,
-    batchesPerEpoch = 200,
+    numEpochs = 1000, --'epoch' is a bit of a misnomer. It doesn't correspond to the # passes over the data. It's simply a unit of computation that we use to dictate when certain callbacks should execute.
+    batchesPerEpoch = 100, --number of gradient steps per epoch (each gradient step is computed on a minibatch)
     epochHooks = callbacks,
     minibatchsize = params.minibatch,
 }
