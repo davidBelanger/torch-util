@@ -29,6 +29,8 @@ Sometimes, such as when using conv nets, one must pad the inputs to be of a mini
 
 require 'torch'
 require 'Util'
+require 'nn'
+
 cmd = torch.CmdLine()
 cmd:option('-input','','input file')
 cmd:option('-output','','out')
@@ -64,7 +66,7 @@ for line in io.lines(params.input) do
 	local inputs = Util:splitByDelim(inputString," ")
 	if(useTokenFeats) then 
 		local newInputs = {}
-		for i = 1,#inputs do table.insert(newInputs,Util:splitByDelim(inputString,",",true)) end
+		for i = 1,#inputs do table.insert(newInputs,Util:splitByDelim(inputs[i],",",true)) end
 		inputs = newInputs
 	end
 	table.insert(intLabels,labels)
@@ -78,6 +80,7 @@ if(shift == 1) then
 	labels:add(1)
 	data:add(1)
 end
+
 local out = {
 	labels = labels,
 	data = data
