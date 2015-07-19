@@ -46,7 +46,7 @@ end
 if(params.featureEmbeddings == 1) then assert(params.featureEmbeddingSpec ~= "") end
 
 preprocess = nil
-if(params.featureEmbeddings) then
+if(params.featureEmbeddings == 1) then
 	local splitter = nn.SplitTable(3,3)
 	preprocess = function(a,b,c) return a,splitter:forward(b),c end
 end
@@ -60,12 +60,14 @@ local convWidth = 3
 local net = nn.Sequential()
 
 local embeddingDim = nil
+local embeddingLayer = nil
 if(params.featureEmbeddings == 0) then
-	local embeddingLayer = nn.Sequential()
+	embeddingLayer = nn.Sequential()
 	embeddingLayer:add(nn.LookupTable(params.vocabSize,params.embeddingDim))
 	net:add(embeddingLayer)
+	embeddingDim = params.embeddingDim
 else
-	local embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec)
+	embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec)
 	net:add(embeddingLayer)
 	embeddingDim = fullEmbeddingDim
 end

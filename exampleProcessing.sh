@@ -5,7 +5,7 @@ testFile=simpleData/test.txt.small
 tokLabels=0 #whether the input has labels at the token level (alternative: at the sentence level)
 
 ##specification about features
-tokFeats=1 #whether to use features for each token (alternative: just token string)
+tokFeats=0 #whether to use features for each token (alternative: just token string)
 featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
 
 ##parameters to choose
