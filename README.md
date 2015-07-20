@@ -17,8 +17,8 @@ Utility code and examples for doing NLP in the torch deep learning library. We t
 Our preprocessing and model training fit together such that they jointly support the following two options
 
 ### Sentence Labels vs. Token Labels:###
- * if 0, then we assume that we have annotation at the sentence level. 
- * if 1, then we assume that the annotation is at the token level (eg. for tagging tasks).
+ * If using sentence labels, there is a single categorical annotation for the whole sentence.
+ * If using token labels, there is a single categorical annotation per token. 
 
 
 ### Word Embeddings vs. Token Feature Embeddings: ###
@@ -28,16 +28,15 @@ Our preprocessing and model training fit together such that they jointly support
 
 
 ## GPU Support: ##
-Running on a GPU vs. a CPU can be accomplished with a single command line flag. 
+Running on a GPU vs. a CPU can be accomplished with a single command line flag -cuda 1 to `ModelTraining.lua`. 
 
 ## Dependencies ##
 Torch (installation [instructions](http://torch.ch/docs/getting-started.html)) and python
 
 
-## Guarantees: ##
-This code provides various utility classes that are very useful when designing deep learning applications for NLP. These arose through the process of developing a particular application. Therefore, it's certain that we do not cover all use cases and that our API would need to be circumvented at various points when applying it to new tasks. Also, we provide no guarantees that the code actually works, etc.
-
 # Code Examples #
+
+The best way to learn about our framework is to read these heavily-commented example scripts.
 
 * Preprocessing: exampleProcessing.sh
 * Model Training: exampleTraining.sh (assumes exampleProcessing.sh has been called)
@@ -94,9 +93,9 @@ A number of common feature templates are implemented at the top of `featureExtra
 	
 
 ## Utility Code for Torch ##
-For an initial release, we leave these fairly un-documented. Many are useful general tools, however, that can be used for other application domains. 
+`ModelTraining.lua` depends on various bits of helper code that are not provided in mainline torch. For an initial release, we leave these fairly un-documented. Many are useful general tools, however, that can be used for other application domains. 
 
-* `LabeledDataFromFile` loads preprocessed data from a file. Adds padding to input data, since a GPU requires homogenous blocks for processing. However, it also manages indexing into the original parts of the data and the parts that were added for managing data size. 
+* `LabeledDataFromFile` loads preprocessed data from a file and adds padding to input data, since a GPU requires homogenous blocks for processing. However, it also manages indexing into the original parts of the data before padding so that you can perform proper evaluation on test data without evaluating on the padding. 
 
 * `MinibatcherFromFile` loads data from a preprocessed torch file and generates minibatches from it (without memory copying). Data is pre-allocated on the GPU if specified, so no CPU-GPU movement occurs during training. 
 
@@ -118,6 +117,8 @@ For an initial release, we leave these fairly un-documented. Many are useful gen
 
 
 # Using My Code
+
+This code provides various utility classes that are very useful when designing deep learning applications for NLP. These arose through the process of developing a particular application. Therefore, it's certain that we do not cover all use cases and that our API would need to be circumvented at various points when applying it to new tasks. Also, we provide no guarantees that the code actually works, etc.
 
 If you have general torch questions, I encourage you to post to the torch google [group](https://groups.google.com/forum/#!forum/torch7), which is quite active. If you have particular comments or suggestions on my code, let me know. Better yet, make a pull request!
 
