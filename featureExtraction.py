@@ -3,15 +3,6 @@ import fileinput
 from featureTemplate import * 
 import re
 
-#you may want to change these
-def tokenize(sentence):
-	strings = sentence.split(" ")
-	return strings
-
-num = re.compile("\d")
-def normalize(string):
-	string = re.sub(num,"#NUM",string)
-	return string 
 
 class TokenString(FeatureTemplate):
 	name = 'tokenString'
@@ -81,6 +72,17 @@ def getTemplates(args):
 				num = re.replace(r"Prefix-","",name)
 				templates.append(Prefix(int(num),allowOOV = True))
 		return templates
+
+#you may want to change these
+def tokenize(sentence):
+	strings = sentence.split(" ")
+	return strings
+
+num = re.compile("\d")
+def normalize(string):
+	string = re.sub(num,"#NUM",string)
+	return string 
+
 
 def main():
 	parser = argparse.ArgumentParser()
