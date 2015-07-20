@@ -1,4 +1,5 @@
 before release:
+#change names of example scripts
 
 #ApplyModel 
 .lua file and shell script (write out the predictions somewhere. also map them back out to strings)
@@ -13,8 +14,8 @@ before release:
 	add option for regularization
 
 #loading word embeddings
-	package up glove2torch stuff?
-
+	add pretrainedEmbeddings option to ModelTraining
+	(see examplePretrainedEmbeddings.sh)
 
 ***affecting DMF stuff:
 is tagging evaluation wrong?

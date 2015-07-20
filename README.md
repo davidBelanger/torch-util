@@ -1,5 +1,5 @@
 # torch-nlp-util #
-Utility code and examples for doing NLP in the torch deep learning library. We take care of the dirty work, like managing mappings from strings to ints for features, handling out-of-vocabulary words, and padding data so that it fits nicely on a GPU. The pipeline takes raw text data as input. No preprocessing necessary. Instead, you get to play around with new architectures!
+This project provides utility code and examples for doing NLP in the torch deep learning library. We take care of the dirty work, like managing mappings from strings to ints for features, handling out-of-vocabulary words, and padding data so that it fits nicely on a GPU. The pipeline takes raw text data as input. This allows you to focus on playing around with new architectures!
 
 
 ## Overview ##
@@ -39,9 +39,9 @@ Torch (installation [instructions](http://torch.ch/docs/getting-started.html)) a
 The best way to learn about our framework is to read these heavily-commented example scripts.
 
 * Preprocessing: exampleProcessing.sh
-* Model Training: exampleTraining.sh (assumes exampleProcessing.sh has been called)
-* Model Application to new data: exampleModelApplication.sh
-
+* Model training: exampleTraining.sh (assumes exampleProcessing.sh has been called)
+* Model application to new data: exampleModelApplication.sh
+* Initializing embeddings using pre-trained vectors: examplePretrainedEmbeddings.sh
 
 
 # Input Data #
@@ -91,6 +91,9 @@ A number of common feature templates are implemented at the top of `featureExtra
 
 ## Model Training and Prediction ##
 	
+
+## Pretrained Word Embeddings ##
+In many applications of supervised deep learning for NLP, it can be very useful to initialize word embeddings using vectors that were pretrained on a large corpus. See examplePretrainedEmbeddings.sh for how to do the necessary preprocessing to load such vectors. This produces a .torch file of embeddings. Add the option -pretrainedEmbeddings `something.torch` to use these. 
 
 ## Utility Code for Torch ##
 `ModelTraining.lua` depends on various bits of helper code that are not provided in mainline torch. For an initial release, we leave these fairly un-documented. Many are useful general tools, however, that can be used for other application domains. 
