@@ -58,24 +58,33 @@ For many architectures, it will be necessary to pad your data. Be very careful t
 
 Say, for example, that we pad each sentence of length L with a <START> and <END> tokens to obtain inputs of size L+2. We use a single layer of width-3 convolutions. Then, produces L feature maps, which we classifying locally. If the architecture had width-5 convolutions, then we'd have L-2 output tags. It is up to the user to choose a padding scheme and architecture such that the  outputs are of the right size. To help avoid these issues, our scripts pad the input tokens, but not the token labels. That way, the evaluation code will crash if the output predictions don't match up with the annotation. 
 
-TODO: update when we resolve tagging padding stuff.
 
 =Packages=
 
 Preprocessing
 See exampleProcessing.sh for an example of how we preprocess data. We perform the following steps:
 
-1) Construct 'domains' for features and for labels. A domain is simply a string->int mapping. 
+1) Construct 'domains' for features and for labels. A domain is simply a string->int mapping. This is constructed by taking an initial pass over the training data. Then, features that don't occur a minimum number of times are discarded. Finally, the string->int mapping is ordered such that frequent features have low int values (by grouping these we help reduce cache misses).
+
 2) Pass over the data and convert everything to ints. Also, pad sentences to achieve various properties of their lengths (todo: see below).
+
 3) Split up the data into separate files so that every file contains input sentences of the same length.
+
 4) Convert each file to torch binary format.
 
+	featureTemplate.py provides utility code for managing string->int mappings, out-of-vocabulary features, etc. 
 
-	TODO: document featureExtraction.py
-	cl args
+	featureExtraction.py provides functionality that you'll interact with.
+
+	Run featureExtraction.py -h to get a full list of options. The non-obvious arguments are:
+		-featureCountThreshold features that occur fewer than this number of times are discarded.
+		-featureTemplates a comma-separated list of names of feature templates to use. See getTemplates() to see the ones are supported.
+		-pad Number of padding tokens that are added to the beginning and end of the sequence.
+		-lengthRound This provides an number such that all input sequences are padded to be a multiple of this length. This is useful if you want to run with very big minibatch sizes, since the data is binned into big blocks.
+
+	**Implementing New Feature Templates
 	
-	adding new feature templates
-	
+
 
 Model Training and Prediction
 	

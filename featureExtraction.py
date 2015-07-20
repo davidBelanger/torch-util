@@ -131,14 +131,9 @@ def main():
 			labels = labelString.split(" ")
 		if(args.pad > 0):
 			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
-			if(tokenLabels):
-				labels = addPadding(labels,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
 		if(args.lengthRound > 0):
 			toks = addPaddingForLengthRounding(toks,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
-			if(tokenLabels): 
-				labels = addPaddingForLengthRounding(labels,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
-
 
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
