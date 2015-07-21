@@ -14,7 +14,7 @@ nlpFeatureConstants = {
 
 class FeatureTemplate:
 
-	skipSpecialChars = True # the default is to add a special feautre if you see a special character
+	#skipSpecialChars = False # the default is to add a special feature if you see a special character
 	spec = re.compile('^#')
 
 
@@ -30,7 +30,7 @@ class FeatureTemplate:
 	def extractFeature(self,normalizedString):
 		feat = None
 		if(self.isSpecial(normalizedString)):
-			feat = "#SpecialChar"
+			feat = normalizedString #"#SpecialChar"
 		else:
 			feat = self.featureFunction(normalizedString)
 	

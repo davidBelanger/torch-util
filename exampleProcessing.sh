@@ -1,12 +1,12 @@
 ##specification for the output data paths
-outDir=proc/
+outDir=proc2/
 name=example #use this to give some informative name to the processed data files
 
 ##specifications about the input data
-trainFile=simpleData/train.txt.small
-devFile=simpleData/dev.txt.small
-testFile=simpleData/test.txt.small
-tokLabels=0 #whether the input has labels at the token level (alternative: at the sentence level)
+trainFile=pos/trn.pos.proc
+devFile=pos/dev.pos.proc
+testFile=pos/tst.pos.proc
+tokLabels=1 #whether the input has labels at the token level (alternative: at the sentence level)
 allFiles="$trainFile:train $devFile:dev $testFile:test" #if there are more files (eg a second dev set) just specify it here
 
 
@@ -19,8 +19,8 @@ featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a
 
 ##parameters to choose
 featureCountThreshold=5
-lengthRounding=5 #this pads such that every sequence has a length that is a multiple of <lengthRounding> (only used on train data)
-pad=2 #this puts <pad> dummy tokens on each side
+lengthRounding=5 #this pads such that every token and label sequence has a length that is a multiple of <lengthRounding> (only used on train data)
+pad=2 #this puts <pad> dummy tokens on each side (important for CNNs)
 
 
 
@@ -31,13 +31,16 @@ splitByLength="python splitByLength.py"
 int2torch="th int2torch.lua"
 domainName=$outDir/domain
 
+featureSpec="-tokenFeatures $tokFeats  -tokenLabels $tokLabels -featureTemplates $featureTemplates"
 
 #---------------Below this are things that you shouldn't need to change-------------------#
 
 ##first, establish string->int mappings for the feature templates
 makeDomain=1
 output="/dev/null"
-$makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -pad $pad -domain $domainName -output $output -tokenFeatures $tokFeats -featureTemplates $featureTemplates
+echo $makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -domain $domainName -output $output $featureSpec -lengthRound $lengthRounding -pad $pad 
+
+$makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -domain $domainName -output $output $featureSpec -lengthRound $lengthRounding -pad $pad 
 
 
 makeDomain=0
@@ -55,7 +58,9 @@ do
 
 	echo making features for $dataset
 	#this extracts features and writes out an intermediate ascii int
-	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs -tokenFeatures $tokFeats -featureTemplates $featureTemplates $lengthArgs
+	echo 	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs $featureSpec $lengthArgs
+
+	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs $featureSpec $lengthArgs
 
 	outDirForDataset=$outDir/$dataset
 	outNameForDataset=$outDirForDataset/$dataset-

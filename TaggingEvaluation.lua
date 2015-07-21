@@ -1,6 +1,6 @@
 local TaggingEvaluation = torch.class('TaggingEvaluation')
 
---todo: make version of this for 
+--the contract here is that the net produces prediction tensors where the innermost dimension ranges over class labels
 
 function TaggingEvaluation:__init(batcher,net)
 	self.batcher = batcher
@@ -17,7 +17,8 @@ function TaggingEvaluation:evaluate(epochNum)
 		local batch_labels, batch_inputs, num_actual_data = self.batcher:getBatch()
 		if(batch_inputs == nil) then break end
 		local preds = self.net:forward(batch_inputs)
-		local _,pi=torch.max(preds,3)
+		local d = preds:dim()
+		local _,pi=torch.max(preds,d) 
 		pi:narrow(1,1,num_actual_data)
 		pi = pi:type(batch_labels:type())
 

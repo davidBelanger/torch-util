@@ -1,3 +1,8 @@
+now:
+test token label stuff on pos data
+why is specialChar ending up in the labeldomain?
+is there a version of logsoftmax on the innermost dimension? 
+
 before release:
 #change names of example scripts
 

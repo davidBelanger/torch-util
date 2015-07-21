@@ -12,6 +12,7 @@ require 'ClassificationEvaluation'
 require 'TaggingEvaluation'
 require 'Util'
 require 'FeatureEmbedding'
+require 'MyReshape'
 
 
 cmd = torch.CmdLine()
@@ -29,7 +30,7 @@ cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
 cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
 cmd:option('-featureDim',15,'dimensionality of 2nd layer features')
 cmd:option('-convWidth',3,'width of convolutions')
-cmd:option('-featureEmbeddings',0,'whether to embed features')
+cmd:option('-tokenFeatures',0,'whether to embed features')
 cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the feature embedding')
 
 
@@ -38,6 +39,7 @@ torch.manualSeed(1234)
 
 local useCuda = params.cuda == 1
 local tokenLabels = params.tokenLabels == 1
+local tokenFeatures = params.tokenFeatures == 1
 if(useCuda)then
     print('USING GPU')
     require 'cutorch'
@@ -61,7 +63,7 @@ local net = nn.Sequential()
 
 local embeddingDim = nil
 local embeddingLayer = nil
-if(params.featureEmbeddings == 0) then
+if(not tokenFeatures) then
 	embeddingLayer = nn.Sequential()
 	embeddingLayer:add(nn.LookupTable(params.vocabSize,params.embeddingDim))
 	net:add(embeddingLayer)
@@ -72,26 +74,41 @@ else
 	embeddingDim = fullEmbeddingDim
 end
 
+local labs,inputs = trainBatcher:getBatch() --for debugging
+
+
 local conv_net = nn.Sequential()
 conv_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,convWidth))
 conv_net:add(nn.ReLU())
-conv_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
-conv_net:add(nn.Max(3))
-conv_net:add(nn.Linear(params.featureDim,params.labelDim))
+
+if(tokenLabels) then
+	--it's lame that nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
+	--to do that, we absorb the time dimension into the minibatch dimension
+	conv_net:add(nn.MyReshape(-1,0,params.featureDim,true)) ---d: Tb  x E
+	--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
+	--desirable side-effect that the criterion now does this division automatically.
+
+	conv_net:add(nn.Linear(params.featureDim,params.labelDim)) 
+else
+	conv_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
+	conv_net:add(nn.Max(3))
+	conv_net:add(nn.Linear(params.featureDim,params.labelDim))
+end
 net:add(conv_net)
-net:add(nn.LogSoftMax())
------------------------------------
 
 local criterion = nn.ClassNLLCriterion()
+net:add(nn.LogSoftMax()) --only use this line if you're using ClassNLLCriterion as your multiclass classification criterion
+
 if(useCuda) then
 	criterion:cuda()
 	net:cuda()
 end
 
 ------Test that Network Is Set Up Correctly-----
-local labs,inputs = trainBatcher:getBatch()
 local out = net:forward(inputs)
 print(out:size())
+print(labs:size())
+os.exit()
 --------Initialize Optimizer-------
 
 local regularization = {

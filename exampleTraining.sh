@@ -1,6 +1,7 @@
 #input data
-d=./proc/ #this is where the processed data is
+d=./proc2/ #this is where the processed data is
 tokFeats=0 #use whatever the prepocessing did
+tokLabels=1
 
 #training options
 lr=0.1 #learning rate. TODO: make a more verbose framework for specifying optimization options on the command line
@@ -9,10 +10,10 @@ minibatch=32 #if using gpu, minibatch sizes needs to be a multiple of 32.
 ##note: if using token features, you can also tweak the per-feature-template embedding sizes below (eg, tokenString:25)
 
 labelDim=`cat $d/domain.labelDomainSize.txt`
-vocabSize=`cat proc/domain.domainSizes.txt  | grep '^tokenString' | cut -f2`
+vocabSize=`cat $d/domain.domainSizes.txt  | grep '^tokenString' | cut -f2`
 
 #see ModelTraining.lua for documentation of its command line options
-options="-trainList $d/train.list -testList $d/dev.list -minibatch $minibatch -cuda $cuda -labelDim $labelDim -vocabSize $vocabSize -learningRate $lr"
+options="-trainList $d/train.list -testList $d/dev.list -tokenFeatures $tokFeats -tokenLabels $tokLabels -minibatch $minibatch -cuda $cuda -labelDim $labelDim -vocabSize $vocabSize -learningRate $lr"
 
 if [ "$tokFeats" == "0" ]; then
 	embeddingDim=25
@@ -30,6 +31,8 @@ else
 	moreOptions=""
 	options="$options $moreOptions"
 fi
+
+echo th ModelTraining.lua $options
 
 th ModelTraining.lua $options
 

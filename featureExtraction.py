@@ -6,7 +6,7 @@ import re
 
 class TokenString(FeatureTemplate):
 	name = 'tokenString'
-	skipSpecialChars = False
+	#skipSpecialChars = True
 	def featureFunction(self,normalizedString):
 		return normalizedString
 
@@ -148,9 +148,9 @@ def main():
 			intFeatures = map(lambda tokStringFeats: featureTemplates.convertToInt(tokStringFeats), stringFeatures)
 			intLabel = None
 			if(tokenLabels):
-				" ".join(map(lambda l: labelDomain.convertToInt(l),labels))
+				intLabel = " ".join(map(lambda l: str(labelDomain.convertToInt(l)),labels))
 			else:
-				intLabel = labelDomain.convertToInt(label)
+				intLabel = str(labelDomain.convertToInt(labelString))
 			print >> out, "{0}\t{1}".format(intLabel,featureTemplates.convertFeaturesForPrinting(intFeatures))
 		else:
 			if(not tokenLabels):
