@@ -1,9 +1,14 @@
 now:
+why are the gt and pred inconsistent sizes on test data?
+preprocess is being called on test data. it's just done up front
 test token label stuff on pos data
 why is specialChar ending up in the labeldomain?
 is there a version of logsoftmax on the innermost dimension? 
 
 before release:
+
+#document the whole preprocess thing and why we're doing it on the fly
+
 # why is the domain size 47 rather than 46?
 #change names of example scripts
 
@@ -26,3 +31,7 @@ before release:
 
 ***affecting DMF stuff:
 is tagging evaluation wrong?
+
+
+# make sure num_actual_data is working
+
