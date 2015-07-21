@@ -48,9 +48,18 @@ end
 if(params.featureEmbeddings == 1) then assert(params.featureEmbeddingSpec ~= "") end
 
 preprocess = nil
-if(params.featureEmbeddings == 1) then
-	local splitter = nn.SplitTable(3,3)
-	preprocess = function(a,b,c) return a,splitter:forward(b),c end
+
+tokenprocessor = nn.Identity()
+labelprocessor = nn.Identity()
+if(params.tokenFeatures == 1) then
+	tokenprocessor = nn.SplitTable(3,3)
+end
+if(params.tokenLabels) then
+	labelprocessor = nn.MyReshape(-1,0,true) --see comment below concerning the other use of nn.MyReshape to explain this line
+end
+
+if(params.tokenLabels or params.tokenFeatures)then
+	preprocess = function(a,b,c) return labelprocessor:forward(a),tokenprocessor:forward(b),c end
 end
 
 local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess)
@@ -108,7 +117,6 @@ end
 local out = net:forward(inputs)
 print(out:size())
 print(labs:size())
-os.exit()
 --------Initialize Optimizer-------
 
 local regularization = {

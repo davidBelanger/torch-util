@@ -55,10 +55,8 @@ for line in io.lines(params.input) do
 	local labelString = fields[1]
 	local inputString = fields[2]
 	local labels = nil
-	if(useTokenLabels and not useTokenFeats) then 
-		labels = Util:splitByDelim(labelString,"\t",true)
-	elseif(useTokenLabels) then
-		labels = Util:splitByDelim(labelString,"\t",false)
+	if(useTokenLabels) then 
+		labels = Util:splitByDelim(labelString," ",true)
 	else
 		labels = tonumber(labelString)
 	end

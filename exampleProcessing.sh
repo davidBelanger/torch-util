@@ -20,7 +20,7 @@ featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a
 ##parameters to choose
 featureCountThreshold=5
 lengthRounding=5 #this pads such that every token and label sequence has a length that is a multiple of <lengthRounding> (only used on train data)
-pad=2 #this puts <pad> dummy tokens on each side (important for CNNs)
+pad=1 #this puts <pad> dummy tokens on each side (important for CNNs). 
 
 
 
@@ -75,6 +75,7 @@ do
 	for ff in $outNameForDataset*.int 
 	do
 		out=`echo $ff | sed 's|.int$||'`.torch
+		
 		$int2torch -input $ff -output $out -tokenLabels $tokLabels -tokenFeatures $tokFeats $addOne #convert to torch format
 		echo $out >> $outDir/$dataset.list
 	done

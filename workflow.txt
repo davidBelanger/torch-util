@@ -4,6 +4,7 @@ why is specialChar ending up in the labeldomain?
 is there a version of logsoftmax on the innermost dimension? 
 
 before release:
+# why is the domain size 47 rather than 46?
 #change names of example scripts
 
 #ApplyModel 
