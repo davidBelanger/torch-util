@@ -82,8 +82,8 @@ See `exampleProcessing.sh` for a well-commented example of how we preprocess dat
 
 * -featureCountThreshold: Features that occur fewer than this number of times are discarded.
 * -featureTemplates: A comma-separated list of names of feature templates to use. See getTemplates() to see the ones are supported.
-* -pad: Number of padding tokens that are added to the beginning and end of the sequence.
 * -lengthRound: All input sequences are padded to be a multiple of this length. This is useful if you want to run with very big minibatch sizes, since the data is binned into big blocks. Typically you would only do such rounding on train data, since otherwise it introduces dummy labels that accuracy evaluation would include.
+* -pad: Number of padding tokens that are added to the beginning and end of the sequence. NOTE: this is designed for use in CNNs. Padding is only applied ot the input tokens, not the labels. Also, padding is applied after handling the lengthRound parameter. Therefore, if using lengthRound, the labels' length will be a multiple of lengthRound, but the tokens will have extra padding beyond this.
 
 A number of common feature templates are implemented at the top of `featureExtraction.py` and you can choose which ones to use by specifying the -featureTemplates flag. Implementing more should be easy, by adapting the templates aleady provided. 
 

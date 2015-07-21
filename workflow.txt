@@ -6,6 +6,7 @@ before release:
 
 #token labels
 	still need to pad annotation for length rounding and minlength
+	make sure that the final output shape is b x T x L
 
 #optimization
 	better default values for SGD.

@@ -131,11 +131,15 @@ def main():
 		labels = None
 		if(tokenLabels): 
 			labels = labelString.split(" ")
-		if(args.pad > 0):
-			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
+	    #this pads the data such that both the token and label sequences have length that's a multiple of lengthRound
 		if(args.lengthRound > 0):
 			toks = addPaddingForLengthRounding(toks,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+			labels = addPaddingForLengthRounding(labels,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
+
+		#this pads the tokens, but not the labels. this is useful when using CNNs
+		if(args.pad > 0):
+			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
 		normalizedToks = map(lambda st: normalize(st), toks)
 		stringFeatures = map(lambda tok: featureTemplates.extractFeatures(tok), normalizedToks)
