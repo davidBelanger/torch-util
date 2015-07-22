@@ -25,7 +25,7 @@ cmd:option('-vocabSize',"",'vocabulary size')
 cmd:option('-optimizationConfigFile',"",'vocabulary size')
 cmd:option('-learningRate',0.1,'init learning rate')
 cmd:option('-tokenLabels',0,'whether the annotation is at the token level or the sentence level')
-cmd:option('-evaluationFrequency',1,'how often to evaluation on test data')
+cmd:option('-evaluationFrequency',25,'how often to evaluation on test data')
 cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
 cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
 cmd:option('-featureDim',15,'dimensionality of 2nd layer features')
@@ -60,18 +60,13 @@ end
 
 if(params.tokenLabels or params.tokenFeatures)then
 	preprocess = function(a,b,c) 
-
-		print('0000')
-		print(a:size())
-		print(labelprocessor:forward(a):size())
-		print(b:size())
-		print('0000')
-		return labelprocessor:forward(a),tokenprocessor:forward(b),c 
+		return labelprocessor:forward(a):clone(),tokenprocessor:forward(b):clone(),c 
 	end
 end
 
 local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess)
 local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.minibatch,useCuda,preprocess)
+
 
 local convWidth = 3
 
