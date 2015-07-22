@@ -49,18 +49,28 @@ if(params.featureEmbeddings == 1) then assert(params.featureEmbeddingSpec ~= "")
 
 preprocess = nil
 
-tokenprocessor = nn.Identity()
-labelprocessor = nn.Identity()
+tokenprocessor = function (x) return x end
+labelprocessor = function (x) return x end
 if(params.tokenFeatures == 1) then
-	tokenprocessor = nn.SplitTable(3,3)
+	local splitter = nn.SplitTable(3,3)
+	tokenprocessor = function(x)
+    	local a = {}
+    	local o = splitter:forward(x)
+    	for i,v in ipairs(o) do
+    		table.insert(a,v:clone())
+    	end
+    	return a
+    end
+
 end
 if(params.tokenLabels) then
-	labelprocessor = nn.MyReshape(-1,0,true) --see comment below concerning the other use of nn.MyReshape to explain this line
+	local reshaper = nn.MyReshape(-1,0,true) --see comment below concerning the other use of nn.MyReshape to explain this line
+	labelprocessor = function(x) return reshaper:forward(x):clone() end
 end
 
 if(params.tokenLabels or params.tokenFeatures)then
 	preprocess = function(a,b,c) 
-		return labelprocessor:forward(a):clone(),tokenprocessor:forward(b):clone(),c 
+		return labelprocessor(a),tokenprocessor(b),c 
 	end
 end
 

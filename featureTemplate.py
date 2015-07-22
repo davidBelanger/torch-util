@@ -6,7 +6,8 @@ import re
 nlpFeatureConstants = {
 	"oov" : "#UNK",
 	"padleft" : "#PadLeft"  ,
-	"padright" : "#PadRight"  
+	"padright" : "#PadRight" ,
+	"special": "#Special" 
 }
 
 ##***this leaves self.featureFunction as abstract. when creating instances of FeatureTemplate, implement this
@@ -16,6 +17,7 @@ class FeatureTemplate:
 
 	#skipSpecialChars = False # the default is to add a special feature if you see a special character
 	spec = re.compile('^#')
+	useSpecialWords = False
 
 
 	def __init__(self,allowOOV):
@@ -30,7 +32,10 @@ class FeatureTemplate:
 	def extractFeature(self,normalizedString):
 		feat = None
 		if(self.isSpecial(normalizedString)):
-			feat = normalizedString #"#SpecialChar"
+			if(self.useSpecialWords):
+				feat = normalizedString 
+			else:
+				feat = nlpFeatureConstants["special"]
 		else:
 			feat = self.featureFunction(normalizedString)
 	
@@ -60,7 +65,7 @@ class FeatureTemplate:
 		if(feat in self.domain):
 			return self.domain[feat]
 		else:
-			assert not self.assertInDomain, "input value " + feat + " not in domain"
+			assert not self.assertInDomain, "input value " + feat + " not in domain" + " name = "  + self.name
 			return self.domain[nlpFeatureConstants["oov"]]
 
 

@@ -6,7 +6,7 @@ import re
 
 class TokenString(FeatureTemplate):
 	name = 'tokenString'
-	#skipSpecialChars = True
+	useSpecialWords = True
 	def featureFunction(self,normalizedString):
 		return normalizedString
 
@@ -50,6 +50,8 @@ class Prefix(FeatureTemplate):
 
 class Label(FeatureTemplate):
 	name = 'label'
+	useSpecialWords = True
+
 	def featureFunction(self,label):
 		return label
 

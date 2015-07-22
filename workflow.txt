@@ -7,7 +7,9 @@ is there a version of logsoftmax on the innermost dimension?
 
 before release:
 
-#document the whole preprocess thing and why we're doing it on the fly
+#switch data preprocessing so that it's done up front once. 
+
+#document the whole preprocess thing 
 
 # why is the domain size 47 rather than 46?
 #change names of example scripts

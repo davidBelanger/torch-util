@@ -1,6 +1,6 @@
 #input data
-d=./proc2/ #this is where the processed data is
-tokFeats=0 #use whatever the prepocessing did
+d=./proc3/ #this is where the processed data is
+tokFeats=1 #use whatever the prepocessing did
 tokLabels=1
 
 #training options
