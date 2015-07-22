@@ -37,7 +37,7 @@ function TaggingEvaluation:evaluate(epochNum)
 		print(pi:size())
 		print(batch_labels:size())
 
-		local correct = pi:eq(batch_labels):sum()
+		local correct = 0--pi:eq(batch_labels):sum()
 		total_correct = total_correct + correct
 		count = count + preds:size(1)
 		--print('processed test batch')
