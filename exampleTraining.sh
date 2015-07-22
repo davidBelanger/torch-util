@@ -28,11 +28,11 @@ else
 	cat $tmp | tr ':'  '\t' > $tmp.2
 	python mergeMaps.py $d/domain.domainSizes.txt $tmp.2 > $tmp.merge
 
-	moreOptions=""
+	moreOptions="-featureEmbeddingSpec $tmp.merge"
 	options="$options $moreOptions"
 fi
 
-echo th ModelTraining.lua $options
-
 th ModelTraining.lua $options
+
+#th ModelTraining.lua $options
 
