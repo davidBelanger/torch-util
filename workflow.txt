@@ -1,5 +1,4 @@
 now:
-why are the gt and pred inconsistent sizes on test data?
 
 preprocess is being called on test data. it's just done up front
 why is specialChar ending up in the labeldomain?
@@ -17,10 +16,6 @@ before release:
 #ApplyModel 
 .lua file and shell script (write out the predictions somewhere. also map them back out to strings)
 
-#token labels
-	still need to pad annotation for length rounding and minlength
-	make sure that the final output shape is b x T x L
-
 #optimization
 	better default values for SGD.
 
@@ -30,10 +25,6 @@ before release:
 #loading word embeddings
 	add pretrainedEmbeddings option to ModelTraining
 	(see examplePretrainedEmbeddings.sh)
-
-***affecting DMF stuff:
-is tagging evaluation wrong?
-
 
 # make sure num_actual_data is working
 

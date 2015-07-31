@@ -5,11 +5,7 @@ function MyReshape:__init(...)
    local arg = {...}
    self.size = torch.LongStorage()
    self.batchsize = torch.LongStorage()
-   if torch.type(arg[#arg]) == 'boolean' then
-      self.batchMode = arg[#arg]
-      table.remove(arg, #arg)
-   end
-   assert(self.batchMode)
+   
 
    self.flexibleDimensions = {}
    local n = #arg
@@ -51,6 +47,17 @@ function MyReshape:updateOutput(input)
       elseif(self.size[i] == 0) then --if 0, then kill this coordinate, by folding into previous coordinate
          self.batchsize:resize(self.batchsize:size() - 1)
          self.batchsize[curIdx-1] = self.batchsize[curIdx-1] * input:size(i)
+      elseif(self.size[i] == -2) then --choose this dimension so that everything else works
+         assert(i == #self.size)
+         local num = input:nElement()
+         prodSoFar = 1
+         for ii = 1,(i-1) do
+            prodSoFar = prodSoFar*self.batchsize[ii]
+         end
+         assert(num % prodSoFar == 0)
+
+         self.batchsize[curIdx] = num/prodSoFar
+         curIdx = curIdx + 1
       else
          self.batchsize[curIdx] = self.size[i]
          curIdx = curIdx + 1
