@@ -41,6 +41,23 @@ function Util:CopyTable(table)
 	return copy
 end
 
+function Util:deepcopy(orig)
+    local orig_type = type(orig)
+    local copy
+    if orig_type == 'table' then
+        copy = {}
+        for orig_key, orig_value in next, orig, nil do
+            copy[Util:deepcopy(orig_key)] = Util:deepcopy(orig_value)
+        end
+        setmetatable(copy, Util:deepcopy(getmetatable(orig)))
+    elseif torch.isTensor(orig) then
+    	copy = orig:clone()
+    else -- number, string, boolean, etc
+        copy = orig
+    end
+    return copy
+end
+
 function Util:assertNan(x,msg)
 	if(torch.isTensor(x))then
 		assert(x:eq(x):all(),msg)

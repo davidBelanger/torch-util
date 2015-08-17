@@ -17,8 +17,13 @@ function MyOptimizerPerModule:__init(model,submodel_to_update,criterion, trainin
             local p,g = oInfo.moduleToOptimize:parameters()
             table.insert(self.paramsPerModule,p)
             table.insert(self.gradParamsPerModule,g)
-            table.insert(self.optConfigs,oInfo.optConfig)
-            table.insert(self.optStates,oInfo.optState)
+            local numBlocks = #self.paramsPerModule[i]
+            self.optConfigs[i] = {}
+            self.optStates[i] = {}
+            for j = 1,numBlocks do
+                table.insert(self.optConfigs[i],Util:deepcopy(oInfo.optConfig))
+                table.insert(self.optStates[i],Util:deepcopy(oInfo.optState)) 
+            end
     end
     self.numModulesToUpdate = #perModuleOptInfo
 
@@ -62,7 +67,8 @@ function MyOptimizerPerModule:trainBatch(inputs, targets)
                 local grad = self.gradParamsPerModule[i][j]
                 return err,grad
             end
-            self.optimMethod(moduleFEval, self.paramsPerModule[i][j], self.optConfigs[i], self.optStates[i])
+            local f,g = moduleFEval(self.paramsPerModule[i][j])
+            self.optimMethod(moduleFEval, self.paramsPerModule[i][j], self.optConfigs[i][j], self.optStates[i][j])
         end
     end
 
