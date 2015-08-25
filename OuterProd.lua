@@ -5,7 +5,7 @@ local OuterProd, parent = torch.class('nn.OuterProd', 'nn.Sequential')
 
 --TODO: this should be implemented directly with basic matrix algebra and torch tensor methods
 
-function SelfOuterProd:__init(dim1,dim2)
+function OuterProd:__init(dim1,dim2)
 	   	parent.__init(self)
 	   	local duplicator = nn.ParallelTable()
 		duplicator:add(nn.Reshape(dim1,1,true))
