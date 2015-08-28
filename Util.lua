@@ -15,6 +15,14 @@ function Util:splitByDelim(str,delim,convertFromString)
     return t
 end
 
+function Util:printRow(t)
+	assert(t:dim() == 1)
+	local num = t:size(1)
+	for i = 1,num do
+		io.write(t[i].." ")
+	end
+	io.write('\n')
+end
 function Util:loadMap(file)
 	print(string.format('reading from %s',file))
 	local map = {}
