@@ -49,7 +49,7 @@ function MinibatcherFromFileList:getAllBatches()
 		for _,b in ipairs(self.batches) do
 			while(true) do
 				local lab,data,unpadded_len = b:getBatchSequential()
-				if(lab == nil) then break end
+				if(data == nil) then break end
 				local a,b,c = self.preprocess(lab,data,unpadded_len)
 				table.insert(t,{a,b,c})
 			end
