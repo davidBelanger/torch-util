@@ -1,8 +1,12 @@
 local MyOptimizer = torch.class('MyOptimizer')
+
+
 --NOTE: various bits of this code were inspired by fbnn Optim.lua 3/5/2015
 
 
 function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,optInfo)
+    local model_utils = require 'model_utils'
+
      assert(trainingOptions)
 	 assert(optInfo)
      self.structured = structured or false
@@ -18,7 +22,9 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
      self.minibatchsize = trainingOptions.minibatchsize
 
 
-    local parameters, gradParameters = model_utils.combine_all_parameters(modules_to_update)
+     assert(type(modules_to_update) == "table")
+     assert(#modules_to_update > 0)
+    local parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
     self.parameters = parameters
     self.gradParameters = gradParameters
 
