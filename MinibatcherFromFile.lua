@@ -61,15 +61,15 @@ function  MinibatcherFromFile:getBatchSequential()
 	local num_actual_data = self.batchSize
 
 	if(endIdx > self.unpadded_len) then
-		num_actual_data = self.unpadded_len - startIdx 
 		endIdx = self.unpadded_len - (self.unpadded_len % 32)
 		if(endIdx < self.unpadded_len) then endIdx = endIdx + 32 end
 	end
+	num_actual_data = math.min(self.unpadded_len - startIdx,endIdx - startIdx) + 1
+
 
 	local batch_labels = self.labels:narrow(1,startIdx,endIdx-startIdx+1)
 	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
-	if(endIdx > self.unpadded_len) then
-		num_actual_data = self.unpadded_len - startIdx +1 
-	end
+
+	assert(num_actual_data <= batch_labels:size(1))
 	return batch_labels,batch_data, num_actual_data
 end
