@@ -24,7 +24,11 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
 
      assert(type(modules_to_update) == "table")
      assert(#modules_to_update > 0)
-    local parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
+
+     assert(#modules_to_update == 1,"if > 1, need to use combine_all_parameters, but don't know how to use this")
+    local parameters, gradParameters = modules_to_update[1]:getParameters()
+
+--    local parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
     self.parameters = parameters
     self.gradParameters = gradParameters
 

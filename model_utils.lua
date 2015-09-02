@@ -1,7 +1,24 @@
---this is copied from https://github.com/karpathy/char-rnn
+--this is modified from https://github.com/karpathy/char-rnn
 
 require 'torch'
 local model_utils = {}
+
+function model_utils.num_parameters(...)
+    -- get parameters
+    local networks = {...}
+    local count = 0
+    for i = 1, #networks do
+        local net_params, net_grads = networks[i]:parameters()
+
+        if net_params then
+            for _, p in pairs(net_params) do
+                count = count + p:nElement()
+            end
+        end
+    end
+    return count
+end
+
 function model_utils.combine_all_parameters(...)
     --[[ like module:getParameters, but operates on many modules ]]--
 
