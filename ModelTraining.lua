@@ -28,12 +28,17 @@ cmd:option('-tokenLabels',0,'whether the annotation is at the token level or the
 cmd:option('-evaluationFrequency',25,'how often to evaluation on test data')
 cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
 cmd:option('-embeddingDim',25,'dimensionality of word embeddings')
+cmd:option('-model',"",'where to save the model. If not specified, does not save')
+cmd:option('-initModel',"",'model checkpoint to initialize from')
+
+
 cmd:option('-featureDim',15,'dimensionality of 2nd layer features')
 cmd:option('-convWidth',3,'width of convolutions')
 cmd:option('-tokenFeatures',0,'whether to embed features')
 cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the feature embedding')
 cmd:option('-testTimeMinibatch',3200,'max size of batches at test time (make this as big as your machine can handle')
 cmd:option('-initEmbeddings',"",'file to initialize embeddings from')
+cmd:option('-saveFrequency',25,'how often to save a model checkpoint')
 
 
 local params = cmd:parse(arg)
@@ -89,67 +94,79 @@ local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTi
 local convWidth = 3
 
 -----Define the Architecture-----
-local net = nn.Sequential()
-
-local embeddingDim = nil
-local embeddingLayer = nil
-if(not tokenFeatures) then
-	embeddingLayer = nn.LookupTable(params.vocabSize,params.embeddingDim)
-	if(params.initEmbeddings ~= "") then  embeddingLayer.weight:copy(torch.load(params.initEmbeddings)) end
-	embeddingDim = params.embeddingDim
-else
-	embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec,params.initEmbeddings)
-	embeddingDim = fullEmbeddingDim
-end
-
-net:add(embeddingLayer)
-
-local labs,inputs = trainBatcher:getBatch() --for debugging
-
-
-local conv_net = nn.Sequential()
-conv_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,convWidth))
-conv_net:add(nn.ReLU())
-
-if(tokenLabels) then
-	--it's lame that nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
-	--to do that, we absorb the time dimension into the minibatch dimension
-	conv_net:add(nn.MyReshape(-1,0,params.featureDim)) ---d: Tb  x E
-	--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
-	--desirable side-effect that the criterion now does this division automatically.
-
-	conv_net:add(nn.Linear(params.featureDim,params.labelDim)) 
-else
-	conv_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
-	conv_net:add(nn.Max(3))
-	conv_net:add(nn.Linear(params.featureDim,params.labelDim))
-end
-net:add(conv_net)
-
+local loadModel = params.initModel ~= ""
 local criterion 
 local training_net
 local prediction_net
-local use_log_likelihood = true
-if(use_log_likelihood) then
-	criterion= nn.ClassNLLCriterion()
-	training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
-	prediction_net = nn.Sequential():add(net):add(nn.SoftMax())
+if(not loadModel) then
+	local net = nn.Sequential()
+
+	local embeddingDim = nil
+	local embeddingLayer = nil
+	if(not tokenFeatures) then
+		embeddingLayer = nn.LookupTable(params.vocabSize,params.embeddingDim)
+		if(params.initEmbeddings ~= "") then  embeddingLayer.weight:copy(torch.load(params.initEmbeddings)) end
+		embeddingDim = params.embeddingDim
+	else
+		embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec,params.initEmbeddings)
+		embeddingDim = fullEmbeddingDim
+	end
+
+	net:add(embeddingLayer)
+
+
+
+	local conv_net = nn.Sequential()
+	conv_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,convWidth))
+	conv_net:add(nn.ReLU())
+
+	if(tokenLabels) then
+		--it's lame that nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
+		--to do that, we absorb the time dimension into the minibatch dimension
+		conv_net:add(nn.MyReshape(-1,0,params.featureDim)) ---d: Tb  x E
+		--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
+		--desirable side-effect that the criterion now does this division automatically.
+
+		conv_net:add(nn.Linear(params.featureDim,params.labelDim)) 
+	else
+		conv_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
+		conv_net:add(nn.Max(3))
+		conv_net:add(nn.Linear(params.featureDim,params.labelDim))
+	end
+	net:add(conv_net)
+
+
+	local use_log_likelihood = true
+	if(use_log_likelihood) then
+		criterion= nn.ClassNLLCriterion()
+		training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
+		prediction_net = nn.Sequential():add(net):add(nn.SoftMax())
+	else
+		criterion = nn.MultiMarginCriterion()
+		training_net = net
+		prediction_net = net
+	end
+
+
+	if(useCuda) then
+		criterion:cuda()
+		training_net:cuda()
+		prediction_net:cuda()
+	end
+
 else
-	criterion = nn.MultiMarginCriterion()
-	training_net = net
-	prediction_net = net
-
+	print('initializing model from '..params.initModel)
+	local checkpoint = torch.load(params.initModel)
+	training_net = checkpoint.training_net
+	prediction_net = checkpoint.prediction_net
+	criterion = checkpoint.criterion
 end
 
-if(useCuda) then
-	criterion:cuda()
-
-	training_net:cuda()
-	prediction_net:cuda()
-end
 
 ------Test that Network Is Set Up Correctly-----
-local out = net:forward(inputs)
+local labs,inputs = trainBatcher:getBatch() --for debugging
+local out = training_net:forward(inputs)
+
 --------Initialize Optimizer-------
 
 local regularization = {
@@ -196,7 +213,21 @@ end
 local evaluationCallback = OptimizerCallback(params.evaluationFrequency,function(i) evaluator:evaluate(i) end,'evaluation')
 table.insert(callbacks,evaluationCallback)
 
-tester = OptimizerCallback(2,function (i) print("hello") end, 'test')
+if(params.model  ~= "") then
+	local saver = function(i) 
+		local file = params.model.."-"..i
+		print('saving to '..file)
+		local toSave = {
+			training_net = training_net,
+			prediction_net = prediction_net, -- saving this doubles the size of the checkpoints and isn't strictly necessary. it's just a difference of whether you have a logsoftmax or softmax on the top
+			criterion = criterion
+		}
+		torch.save(file,toSave) 
+	end
+	local savingCallback = OptimizerCallback(params.saveFrequency,saver,'saving')
+	table.insert(callbacks,savingCallback)
+end
+
 ------------------------
 
 --------Training Options-------
