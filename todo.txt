@@ -1,16 +1,8 @@
 now:
 
-move things into subfolders
 move rnn stuff to this repo
-why is specialChar ending up in the labeldomain?
-
-before release:
 
 #switch train data preprocessing so that it's done up front once. 
-
-
-# why is the domain size 47 rather than 46?
-#change names of example scripts
 
 #ApplyModel 
 .lua file and shell script (write out the predictions somewhere. also map them back out to strings)
