@@ -53,7 +53,7 @@ params.useCuda = useCuda
 
 if(params.featureEmbeddings == 1) then assert(params.featureEmbeddingSpec ~= "") end
 
-preprocess = nil
+local preprocess = nil
 
 tokenprocessor = function (x) return x end
 labelprocessor = function (x) return x end
@@ -124,12 +124,26 @@ else
 end
 net:add(conv_net)
 
-local criterion = nn.ClassNLLCriterion()
-net:add(nn.LogSoftMax()) --only use this line if you're using ClassNLLCriterion as your multiclass classification criterion
+local criterion 
+local training_net
+local prediction_net
+local use_log_likelihood = true
+if(use_log_likelihood) then
+	criterion= nn.ClassNLLCriterion()
+	training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
+	prediction_net = nn.Sequential():add(net):add(nn.SoftMax())
+else
+	criterion = nn.MultiMarginCriterion()
+	training_net = net
+	prediction_net = net
+
+end
 
 if(useCuda) then
 	criterion:cuda()
-	net:cuda()
+
+	training_net:cuda()
+	prediction_net:cuda()
 end
 
 ------Test that Network Is Set Up Correctly-----
@@ -172,9 +186,9 @@ optInfo = {
 callbacks = {}
 local evaluator = nil
 if(tokenLabels) then
-	evaluator = TaggingEvaluation(testBatcher,net)
+	evaluator = TaggingEvaluation(testBatcher,prediction_net)
 else
-	evaluator = ClassificationEvaluation(testBatcher,net)
+	evaluator = ClassificationEvaluation(testBatcher,prediction_net)
 end
 
 local evaluationCallback = OptimizerCallback(params.evaluationFrequency,function(i) evaluator:evaluate(i) end,'evaluation')
@@ -195,6 +209,6 @@ local trainingOptions = {
 
 params.learningRate = params.pretrainLearningRate
 
-optimizer = MyOptimizer(net,net,criterion,trainingOptions,optInfo) 
+optimizer = MyOptimizer(training_net,training_net,criterion,trainingOptions,optInfo) 
 
 optimizer:train(function () return trainBatcher:getBatch() end)
