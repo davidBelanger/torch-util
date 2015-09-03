@@ -1,3 +1,5 @@
+#!/bin/sh
+
 ##specification for the output data paths
 outDir=proc3/
 name=example #use this to give some informative name to the processed data files

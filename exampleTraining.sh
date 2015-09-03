@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #input data
 d=./proc3/ #this is where the processed data is
 tokFeats=1 #use whatever the prepocessing did

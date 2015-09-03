@@ -1,6 +1,6 @@
 now:
 
-preprocess is being called on test data. it's just done up front
+move rnn stuff to this repo
 why is specialChar ending up in the labeldomain?
 is there a version of logsoftmax on the innermost dimension? 
 
@@ -26,5 +26,4 @@ before release:
 	add pretrainedEmbeddings option to ModelTraining
 	(see examplePretrainedEmbeddings.sh)
 
-# make sure num_actual_data is working
 
