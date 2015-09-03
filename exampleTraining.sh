@@ -2,7 +2,7 @@
 
 #input data
 d=./proc/ #this is where the processed data is
-tokFeats=1 #use whatever the prepocessing did
+tokFeats=0 #use whatever the prepocessing did
 tokLabels=1
 
 #training options
@@ -24,15 +24,21 @@ initEmbeddings=$d/embeddings
 options="$options -initEmbeddings $initEmbeddings"
 
 if [ "$tokFeats" == "0" ]; then
-	embeddingDim=25
+	##user-specified embeddings sizes
+	embeddingDim=50 ##important: if use initEmbeddings, the dimensionality specified here needs to be the same as the tensor in $initEmbeddings
 	featureDim=15
+
 	moreOptions="-embeddingDim $embeddingDim -featureDim $featureDim"
 	options="$options $moreOptions"
 else
 	tmp=/tmp/domainSizes
+	
+	##user-specified embeddings sizes
 	echo tokenString:50 > $tmp ##important: if use initEmbeddings, the dimensionality specified here needs to be the same as the tensor in $initEmbeddings
 	echo isCap:5 >> $tmp
 	echo isNumeric:3 >> $tmp
+
+
 	cat $tmp | tr ':'  '\t' > $tmp.2
 	python mergeMaps.py $d/domain.domainSizes.txt $tmp.2 > $tmp.merge
 

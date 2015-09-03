@@ -28,7 +28,7 @@ Our preprocessing and model training fit together such that they jointly support
 
 
 ## GPU Support: ##
-Running on a GPU vs. a CPU can be accomplished with a single command line flag -cuda 1 to `ModelTraining.lua`. 
+Running on a GPU vs. a CPU can be accomplished with a single command line flag in `ModelTraining.lua`. Use -gpuid -1 to use the CPU. For the GPU, use gpuid >=0.
 
 ## Dependencies ##
 Torch (installation [instructions](http://torch.ch/docs/getting-started.html)) and python
