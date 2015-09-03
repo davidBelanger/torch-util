@@ -16,9 +16,9 @@ th ascii2torch.lua $tmp.embeddings $tmp.embeddings.torch
 ##it's possible that the input embeddings are mixed-case, but your data has been preprocessed to be all lower case. use map_case = 1 in this case.
 ##note that there are certainly more sophisticated ways to map from one vocabulary to the other. 
 if [ "$map_case" == "1" ]; then
-	cat $in_vocab | tr '[:upper:]' '[:lower:]' > $tmp.inputVocab
+	cat $tmp.vocab | tr '[:upper:]' '[:lower:]' > $tmp.vocab.norm
 else
-	cp $in_vocab  $tmp.inputVocab
+	cp $tmp.vocab  $tmp.vocab.norm
 fi
 
 
@@ -26,6 +26,6 @@ fi
 #in some sense, this is suboptimal, since the vocabulary is usually sorted by frequency. On the other hand, this whole casing business is dangerous, and ideally you wouldn't use map_case=1. You should have pretrained embeddings that 
 #are consistent with how you're doing feature extraction. 
 
-th MapEmbeddings.lua $tmp.inputVocab $tmp.embeddings $tmp.target_vocab $out_embeddings 
+th MapEmbeddings.lua $tmp.vocab.norm $tmp.embeddings.torch $target_vocab $out_embeddings 
 
 

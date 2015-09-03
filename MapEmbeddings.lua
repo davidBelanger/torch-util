@@ -24,8 +24,9 @@ for i = 1,#d_vocab do
 	end
 end
 
-print('vocabulary overlap = '..#d2e)
-print('vocabulary overlap2 = '..cnt)
+--print('vocabulary overlap = '..#d2e)
+local coverage = 100*cnt/#d_vocab
+print('vocabulary coverage % = '..coverage)
 
 local dim = e_embeddings:size(2)
 local scale = 0.01

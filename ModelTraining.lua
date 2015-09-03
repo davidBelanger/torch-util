@@ -33,6 +33,8 @@ cmd:option('-convWidth',3,'width of convolutions')
 cmd:option('-tokenFeatures',0,'whether to embed features')
 cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the feature embedding')
 cmd:option('-testTimeMinibatch',3200,'max size of batches at test time (make this as big as your machine can handle')
+cmd:option('-initEmbeddings',"",'file to initialize embeddings from')
+
 
 local params = cmd:parse(arg)
 local seed = 1234
@@ -92,15 +94,15 @@ local net = nn.Sequential()
 local embeddingDim = nil
 local embeddingLayer = nil
 if(not tokenFeatures) then
-	embeddingLayer = nn.Sequential()
-	embeddingLayer:add(nn.LookupTable(params.vocabSize,params.embeddingDim))
-	net:add(embeddingLayer)
+	embeddingLayer = nn.LookupTable(params.vocabSize,params.embeddingDim)
+	if(params.initEmbeddings ~= "") then  embeddingLayer.weight:copy(torch.load(params.initEmbeddings)) end
 	embeddingDim = params.embeddingDim
 else
-	embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec)
-	net:add(embeddingLayer)
+	embeddingLayer, fullEmbeddingDim = FeatureEmbedding:getEmbeddingNetwork(params.featureEmbeddingSpec,params.initEmbeddings)
 	embeddingDim = fullEmbeddingDim
 end
+
+net:add(embeddingLayer)
 
 local labs,inputs = trainBatcher:getBatch() --for debugging
 

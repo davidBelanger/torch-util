@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #input data
-d=./proc3/ #this is where the processed data is
+d=./proc/ #this is where the processed data is
 tokFeats=1 #use whatever the prepocessing did
 tokLabels=1
 
@@ -15,7 +15,13 @@ labelDim=`cat $d/domain.labelDomainSize.txt`
 vocabSize=`cat $d/domain.domainSizes.txt  | grep '^tokenString' | cut -f2`
 
 #see ModelTraining.lua for documentation of its command line options
-options="-trainList $d/train.list -testList $d/dev.list -tokenFeatures $tokFeats -tokenLabels $tokLabels -minibatch $minibatch -gpuid $gpuid -labelDim $labelDim -vocabSize $vocabSize -learningRate $lr"
+dataOptions="$d/train.list -testList $d/dev.list -tokenFeatures $tokFeats -tokenLabels $tokLabels -labelDim $labelDim -vocabSize $vocabSize"
+options="-trainList $dataOptions -minibatch $minibatch -gpuid $gpuid  -learningRate $lr"
+
+#optional use of pretrainedEmbeddings
+
+initEmbeddings=$d/embeddings
+options="$options -initEmbeddings $initEmbeddings"
 
 if [ "$tokFeats" == "0" ]; then
 	embeddingDim=25
@@ -24,7 +30,7 @@ if [ "$tokFeats" == "0" ]; then
 	options="$options $moreOptions"
 else
 	tmp=/tmp/domainSizes
-	echo tokenString:25 > $tmp
+	echo tokenString:50 > $tmp ##important: if use initEmbeddings, the dimensionality specified here needs to be the same as the tensor in $initEmbeddings
 	echo isCap:5 >> $tmp
 	echo isNumeric:3 >> $tmp
 	cat $tmp | tr ':'  '\t' > $tmp.2

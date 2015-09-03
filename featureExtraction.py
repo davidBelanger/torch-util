@@ -170,10 +170,10 @@ def main():
 		writeAsciiDomainInfo(args.domain,featureTemplates,labelDomain)
 		with open(args.domain + ".tokenString") as data_file:
 			tokenStringDomain = json.load(data_file)["domain"]
-			writeAsciiList(args.domain + "-vocab",tokenStringDomain.keys())
+			writeAsciiList(args.domain + "-vocab.ascii",tokenStringDomain.keys())
 
 
-		writeAsciiList(args.domain + "-labels",labelDomain.keys())
+		writeAsciiList(args.domain + "-labels.ascii",labelDomain.domain.keys())
 	else:
 		print "wrote " + args.output
 		out.close()

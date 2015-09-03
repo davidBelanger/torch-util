@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ##specification for the output data paths
-outDir=proc4/
+outDir=proc/
 name=example #use this to give some informative name to the processed data files
 
 ##specifications about the input data
