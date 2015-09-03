@@ -32,7 +32,7 @@ cmd:option('-featureDim',15,'dimensionality of 2nd layer features')
 cmd:option('-convWidth',3,'width of convolutions')
 cmd:option('-tokenFeatures',0,'whether to embed features')
 cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the feature embedding')
-
+cmd:option('-testTimeMinibatch',3200,'max size of batches at test time (make this as big as your machine can handle')
 
 local params = cmd:parse(arg)
 local seed = 1234
@@ -81,7 +81,7 @@ if(params.tokenLabels or params.tokenFeatures)then
 end
 
 local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess)
-local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.minibatch,useCuda,preprocess)
+local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTimeMinibatch,useCuda,preprocess)
 
 
 local convWidth = 3
