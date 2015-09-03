@@ -19,7 +19,7 @@ cmd = torch.CmdLine()
 cmd:option('-trainList','','torch format train file list')
 cmd:option('-testList','','torch format test file list')
 cmd:option('-minibatch',32,'minibatch size')
-cmd:option('-cuda',0,'whether to use gpu')
+cmd:option('-gpuid',-1,'which gpu to use. -1 = use CPU')
 cmd:option('-labelDim',-1,'label dimension')
 cmd:option('-vocabSize',-1,'vocabulary size')
 cmd:option('-optimizationConfigFile',"",'vocabulary size')
@@ -35,16 +35,22 @@ cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the featur
 
 
 local params = cmd:parse(arg)
-torch.manualSeed(1234)
+local seed = 1234
+torch.manualSeed(seed)
 
 local useCuda = params.cuda == 1
 local tokenLabels = params.tokenLabels == 1
 local tokenFeatures = params.tokenFeatures == 1
+local useCuda = params.gpuid >= 0
 if(useCuda)then
     print('USING GPU')
     require 'cutorch'
     require('cunn')
+    cutorch.setDevice(params.gpuid + 1) 
+    cutorch.manualSeed(seed)
 end
+params.useCuda = useCuda
+
 if(params.featureEmbeddings == 1) then assert(params.featureEmbeddingSpec ~= "") end
 
 preprocess = nil

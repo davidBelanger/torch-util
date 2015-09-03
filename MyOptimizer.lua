@@ -29,7 +29,7 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
 --            assert(#modules_to_update == 1,"if > 1, need to use combine_all_parameters, but so far this is causing bugs")
 --            parameters, gradParameters = modules_to_update[1]:getParameters()
 --    else
-            parameters, gradParameters = modules_to_update:getParameters()
+  y          parameters, gradParameters = modules_to_update:getParameters()
 --    end
 
 --    local parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
