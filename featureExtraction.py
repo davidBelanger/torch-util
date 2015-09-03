@@ -2,7 +2,7 @@ import argparse
 import fileinput
 from featureTemplate import * 
 import re
-
+import json
 
 class TokenString(FeatureTemplate):
 	name = 'tokenString'
@@ -168,9 +168,22 @@ def main():
 		labelDomain.constructDomain(0)
 		labelDomain.writeDomain(args.domain + "-label")
 		writeAsciiDomainInfo(args.domain,featureTemplates,labelDomain)
+		with open(args.domain + ".tokenString") as data_file:
+			tokenStringDomain = json.load(data_file)["domain"]
+			writeAsciiList(args.domain + "-vocab",tokenStringDomain.keys())
+
+
+		writeAsciiList(args.domain + "-labels",labelDomain.keys())
 	else:
 		print "wrote " + args.output
 		out.close()
+
+def writeAsciiList(outFile,list):
+	out = open(outFile,'w')
+	for item in list:
+  		out.write("%s\n" % item)
+  	out.close()
+
 
 def writeAsciiDomainInfo(domainFileName,featureTemplates,labelDomain):
 	fn = domainFileName + ".domainSizes.txt"
