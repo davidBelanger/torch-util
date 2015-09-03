@@ -128,6 +128,8 @@ There are also some other useful torch code that we don't directly use in any of
 
 * `OuterProd` is just like SelfOuterProd, except it takes two input tensors and returns a flattened tensor of their pairwise terms.
 
+* `Entropy` is a proper nn module that inputs a tensor where each row is a vector of multinomial probabilities, ie each row sums to one. Outputs the entropy of the dist. 
+
 # Using My Code
 
 This code provides various utility classes that are very useful when designing deep learning applications for NLP. These arose through the process of developing a particular application. Therefore, it's certain that we do not cover all use cases and that our API would need to be circumvented at various points when applying it to new tasks. Also, we provide no guarantees that the code actually works, etc.
