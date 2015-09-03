@@ -64,7 +64,7 @@ if(params.tokenFeatures == 1) then
 
 end
 if(params.tokenLabels) then
-	local reshaper = nn.MyReshape(-1,0,true) --see comment below concerning the other use of nn.MyReshape to explain this line
+	local reshaper = nn.MyReshape(-1,0) --see comment below concerning the other use of nn.MyReshape to explain this line
 	labelprocessor = function(x) return reshaper:forward(x):clone() end
 end
 
@@ -106,7 +106,7 @@ conv_net:add(nn.ReLU())
 if(tokenLabels) then
 	--it's lame that nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
 	--to do that, we absorb the time dimension into the minibatch dimension
-	conv_net:add(nn.MyReshape(-1,0,params.featureDim,true)) ---d: Tb  x E
+	conv_net:add(nn.MyReshape(-1,0,params.featureDim)) ---d: Tb  x E
 	--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
 	--desirable side-effect that the criterion now does this division automatically.
 

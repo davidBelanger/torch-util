@@ -21,12 +21,16 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
      self.optInfo = optInfo
      self.minibatchsize = trainingOptions.minibatchsize
 
+    local parameters
+    local gradParameters
 
-     assert(type(modules_to_update) == "table")
-     assert(#modules_to_update > 0)
-
-     assert(#modules_to_update == 1,"if > 1, need to use combine_all_parameters, but don't know how to use this")
-    local parameters, gradParameters = modules_to_update[1]:getParameters()
+--     if(type(modules_to_update) == "table") then
+--            assert(#modules_to_update > 0)
+--            assert(#modules_to_update == 1,"if > 1, need to use combine_all_parameters, but so far this is causing bugs")
+--            parameters, gradParameters = modules_to_update[1]:getParameters()
+--    else
+            parameters, gradParameters = modules_to_update:getParameters()
+--    end
 
 --    local parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
     self.parameters = parameters
