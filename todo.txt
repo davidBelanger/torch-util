@@ -1,14 +1,13 @@
 now:
 
+move things into subfolders
 move rnn stuff to this repo
 why is specialChar ending up in the labeldomain?
-is there a version of logsoftmax on the innermost dimension? 
 
 before release:
 
-#switch data preprocessing so that it's done up front once. 
+#switch train data preprocessing so that it's done up front once. 
 
-#document the whole preprocess thing 
 
 # why is the domain size 47 rather than 46?
 #change names of example scripts
@@ -21,9 +20,5 @@ before release:
 
 #regularization
 	add option for regularization
-
-#loading word embeddings
-	add pretrainedEmbeddings option to ModelTraining
-	(see examplePretrainedEmbeddings.sh)
 
 
