@@ -92,7 +92,7 @@ A number of common feature templates are implemented at the top of `featureExtra
 ## Model Training and Prediction ##
 See `exampleTraining.sh` for a well-commented example of how we train models. This wraps `ModelTraining.lua`. This provides options for checkpointing models, initializing training from existing models, initializing word embeddings from pretrained embeddings, analyzing dev set accuracy within the inner loop of learning, etc. 
 
-We also provide `ModelPrediction.lua,` which takes held-out data and provides predictions. 
+Soon, we will also provide an example `exampleModelApplication.sh`, which will wrap `ModelPrediction.lua.` This takes held-out data and provides predictions. 
 
 
 ## Pretrained Word Embeddings ##
