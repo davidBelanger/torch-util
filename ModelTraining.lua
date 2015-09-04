@@ -78,9 +78,11 @@ if(params.tokenFeatures == 1) then
     end
 
 end
+
 if(params.tokenLabels) then
 	local reshaper = nn.MyReshape(-1,0) --see comment below concerning the other use of nn.MyReshape to explain this line
 	labelprocessor = function(x) return reshaper:forward(x):clone() end
+	if(useCuda) then reshaper:cuda() end
 end
 
 if(params.tokenLabels or params.tokenFeatures)then
@@ -157,7 +159,13 @@ else
 	prediction_net = net
 end
 
-if(useCuda) then criterion:cuda() end
+
+
+if(useCuda) then 
+	criterion:cuda() 
+	training_net:cuda()
+	prediction_net:cuda()
+end
 
 ------Test that Network Is Set Up Correctly-----
 local labs,inputs = trainBatcher:getBatch() --for debugging
