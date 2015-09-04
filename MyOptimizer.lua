@@ -76,7 +76,12 @@ function MyOptimizer:train(batchSampler)
         self.totalError:zero()
         for j = 1,batchesPerEpoch do
     	    local minibatch_targets,minibatch_inputs = batchSampler()
-            numProcessed = numProcessed + minibatch_targets:nElement()
+            if(minibatch_targets) then
+                numProcessed = numProcessed + minibatch_targets:nElement() --this reports the number of 'training examples.' If doing sequence tagging, it's the number of total timesteps, not the number of sequences. 
+            else
+                --in some cases, the targets are actually part of the inputs with some weird table structure. Need to account for this.
+                numProcessed = numProcessed + self.minibatchsize
+            end
             self:trainBatch(minibatch_inputs,minibatch_targets) 
         end
 
@@ -88,7 +93,7 @@ function MyOptimizer:train(batchSampler)
         prevTime = currTime
         print(string.format('\nIter: %d\navg loss in epoch = %f\ntotal elapsed = %f\ntime per batch = %f',i,avgError, ElapsedTime,ElapsedTime/batchesPerEpoch))
         --print(string.format('cur learning rate = %f',self.optConfig.learningRate))
-        print(string.format('examples/sec = %f',rate)) --this reports the number of 'training examples' per second. If doing sequence tagging, it's the number of total timesteps, not the number of sequences. 
+        print(string.format('examples/sec = %f',rate))
         self:postEpoch()
 
          for hookIdx = 1,#self.trainingOptions.epochHooks do
