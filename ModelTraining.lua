@@ -165,6 +165,7 @@ if(useCuda) then
 end
 
 ------Test that Network Is Set Up Correctly-----
+print(training_net)
 local labs,inputs = trainBatcher:getBatch() --for debugging
 local out = training_net:forward(inputs)
 
