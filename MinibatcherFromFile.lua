@@ -2,7 +2,7 @@ require 'LabeledDataFromFile'
 local MinibatcherFromFile = torch.class('MinibatcherFromFile')
 
 
-function MinibatcherFromFile:__init(file,batchSize,cuda)
+function MinibatcherFromFile:__init(file,batchSize,cuda,preprocess)
 	self.batchSize = batchSize
 
 
@@ -18,7 +18,13 @@ function MinibatcherFromFile:__init(file,batchSize,cuda)
 		self.data = loaded.inputs_pad
 	end
 	assert(self.labels:size(1) == self.data:size(1))
+
+	if(preprocess) then
+		self.labels, self.data, self.unpadded_len =  preprocess(self.labels,self.data,self.unpadded_len)
+	end
+	
 	self.numRows = self.data:size(1)
+
 	self.curStart = 1
 	self.curStartSequential = 1
 end
