@@ -92,7 +92,7 @@ local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,u
 local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTimeMinibatch,useCuda,preprocess)
 
 
-local convWidth = 3
+local convWidth = params.convWidth
 
 -----Define the Architecture-----
 local loadModel = params.initModel ~= ""

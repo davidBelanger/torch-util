@@ -22,8 +22,7 @@ featureTemplates=tokenString,isCap #if using token features, this is a list of t
 ##parameters to choose
 featureCountThreshold=5
 lengthRounding=5 #this pads such that every token and label sequence has a length that is a multiple of <lengthRounding> (only used on train data)
-pad=1 #this puts <pad> dummy tokens on each side (important for CNNs). 
-
+pad=2 #this puts <pad> dummy tokens on each side (important for CNNs). 
 
 
 #script paths

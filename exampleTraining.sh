@@ -2,7 +2,7 @@
 
 #input data
 d=./proc/ #this is where the processed data is
-tokFeats=1 #use whatever the prepocessing did
+tokFeats=0 #use whatever the prepocessing did
 tokLabels=1
 
 
@@ -13,7 +13,7 @@ tokLabels=1
 
 #optional use of pretrained word embeddings (this option not used if you specify initModel)
 #initEmbeddings= #use this if you don't want to use embeddings
-#initEmbeddings=$d/embeddings
+initEmbeddings=$d/embeddings
 
 
 #output 
@@ -23,10 +23,11 @@ saveFrequency=5 #how often to checkpoint
 
 #training options
 lr=0.1 #learning rate. TODO: make a more verbose framework for specifying optimization options on the command line
-gpuid=0 #if >= 0, then do computation on GPU
+gpuid=-1 #if >= 0, then do computation on GPU
 minibatch=32 #if using gpu, minibatch sizes needs to be a multiple of 32.
 l2=0.01
 embeddingL2=0.1
+convWidth=3 ##make sure this is compatible with the amount of padding used in exampleProcessing.sh. If  convWidth = 3, need pad = 1. If convWidth=5, need pad = 2...
 ##IMPORTANT: if using token features, you should also tweak the per-feature-template embedding sizes below (eg, tokenString:50)
 
 
@@ -51,7 +52,7 @@ fi
 if [ "$tokFeats" == "0" ]; then
 	##user-specified embeddings sizes
 	embeddingDim=50 ##important: if use initEmbeddings, the dimensionality specified here needs to be the same as the tensor in $initEmbeddings
-	featureDim=300
+	featureDim=15
 
 	moreOptions="-embeddingDim $embeddingDim -featureDim $featureDim"
 	options="$options $moreOptions"
