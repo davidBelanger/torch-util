@@ -13,8 +13,8 @@ allFiles="$trainFile:train $devFile:dev $testFile:test" #if there are more files
 
 
 ##specification about features
-tokFeats=0 #whether to use features for each token (alternative: just token string, ie word type, is the only feature)
-featureTemplates=tokenString,isCap,isNumeric #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
+tokFeats=1 #whether to use features for each token (alternative: just token string, ie word type, is the only feature)
+featureTemplates=tokenString,isCap #if using token features, this is a list of the names of the templates to use (assuming that each of these is implemented in $makeFeatures)
 
 #this is an example of all the implemented options for features. Here, you can use any width d for the final features: Prefix-d  and Suffix-d
 #featureTemplates=tokenString,isCap,isNumeric,Prefix-3,Suffix-3 
