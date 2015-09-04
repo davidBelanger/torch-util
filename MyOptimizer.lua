@@ -76,9 +76,9 @@ function MyOptimizer:train(batchSampler)
         self.totalError:zero()
         for j = 1,batchesPerEpoch do
     	    local minibatch_targets,minibatch_inputs = batchSampler()
+            numProcessed = numProcessed + minibatch_targets:nElement()
             self:trainBatch(minibatch_inputs,minibatch_targets) 
         end
-        numProcessed = numProcessed + epochSize
 
         local avgError = self.totalError[1]/batchesPerEpoch
         local currTime = sys.clock()
@@ -88,7 +88,7 @@ function MyOptimizer:train(batchSampler)
         prevTime = currTime
         print(string.format('\nIter: %d\navg loss in epoch = %f\ntotal elapsed = %f\ntime per batch = %f',i,avgError, ElapsedTime,ElapsedTime/batchesPerEpoch))
         --print(string.format('cur learning rate = %f',self.optConfig.learningRate))
-        print(string.format('examples/sec = %f',rate))
+        print(string.format('examples/sec = %f',rate)) --this reports the number of 'training examples' per second. If doing sequence tagging, it's the number of total timesteps, not the number of sequences. 
         self:postEpoch()
 
          for hookIdx = 1,#self.trainingOptions.epochHooks do

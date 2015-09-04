@@ -1,4 +1,4 @@
-# torch-nlp-util #
+# torch-util #
 This project provides utility code and examples for doing NLP in the torch deep learning library. We take care of the dirty work, like managing mappings from strings to ints for features, handling out-of-vocabulary words, and padding data so that it fits nicely on a GPU. The pipeline takes raw text data as input. This allows you to focus on playing around with new architectures!
 
 
@@ -9,8 +9,8 @@ This project provides utility code and examples for doing NLP in the torch deep 
 * Note: unsupervised embedding models would be easy to implement in our framework.
 
 ### Architectures: ###
-* Convolutional NNs. 
-* RNNs would be easy to implement as well. 
+* Convolutional NNs
+* RNNs (LSTMs, GRUs, etc) coming soon
 
 ## Labels and Features ##
 
@@ -90,10 +90,13 @@ A number of common feature templates are implemented at the top of `featureExtra
 `int2torch.lua` converts intermediate processing files containing ascii ints to packed binary torch tensors. Constructing these up front is useful because then the torch model training code doesn't need to do any preprocessing. 
 
 ## Model Training and Prediction ##
-	
+See `exampleTraining.sh` for a well-commented example of how we train models. This wraps `ModelTraining.lua`. This provides options for checkpointing models, initializing training from existing models, initializing word embeddings from pretrained embeddings, analyzing dev set accuracy within the inner loop of learning, etc. 
+
+We also provide `ModelPrediction.lua,` which takes held-out data and provides predictions. 
+
 
 ## Pretrained Word Embeddings ##
-In many applications of supervised deep learning for NLP, it can be very useful to initialize word embeddings using vectors that were pretrained on a large corpus. See examplePretrainedEmbeddings.sh for how to do the necessary preprocessing to load such vectors. This produces a .torch file of embeddings. Add the option -pretrainedEmbeddings `something.torch` to use these. 
+In many applications of supervised deep learning for NLP, it can be very useful to initialize word embeddings using vectors that were pretrained on a large corpus. See examplePretrainedEmbeddings.sh for how to do the necessary preprocessing to load such vectors. This produces a .torch file of embeddings. Add the option -initEmbeddings <.torch file> to use these. 
 
 ## Utility Code for Torch ##
 `ModelTraining.lua` depends on various bits of helper code that are not provided in mainline torch. For an initial release, we leave these fairly un-documented. Many are useful general tools, however, that can be used for other application domains. 
@@ -137,6 +140,8 @@ This code provides various utility classes that are very useful when designing d
 If you have general torch questions, I encourage you to post to the torch google [group](https://groups.google.com/forum/#!forum/torch7), which is quite active. If you have particular comments or suggestions on my code, let me know. Better yet, make a pull request!
 
 
+# License
+MIT
 
 
 
