@@ -67,16 +67,13 @@ local preprocess = nil
 tokenprocessor = function (x) return x end
 labelprocessor = function (x) return x end
 if(params.tokenFeatures == 1) then
-	local splitter = nn.SplitTable(3,3)
 	tokenprocessor = function(x)
     	local a = {}
-    	local o = splitter:forward(x)
-    	for i,v in ipairs(o) do
-    		table.insert(a,v:clone())
+    	for i = 1,x:size(3) do
+    		table.insert(a,x:select(3,i))
     	end
     	return a
     end
-
 end
 
 if(params.tokenLabels) then
