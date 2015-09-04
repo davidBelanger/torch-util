@@ -80,9 +80,9 @@ if(params.tokenFeatures == 1) then
 end
 
 if(params.tokenLabels) then
-	local reshaper = nn.MyReshape(-1,0) --see comment below concerning the other use of nn.MyReshape to explain this line
-	labelprocessor = function(x) return reshaper:forward(x):clone() end
-	if(useCuda) then reshaper:cuda() end
+	labelprocessor = function(x) 
+		return x:view(x:nElement()) --to understand the necessity for this line, read the comment about MyReshape down below
+	end
 end
 
 if(params.tokenLabels or params.tokenFeatures)then
