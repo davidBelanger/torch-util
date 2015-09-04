@@ -109,7 +109,6 @@ function optim.emd(opfunc, x, config, state)
       x:add(-1,maxes:expandAs(x))
       --      local logZs = x:clone():exp():sum(x:dim()):log():expandAs(x) 
 
-      if(not config.logZs) then print(x:isContiguous()) end
       config.xExp = config.xExp or x.new()
 
       config.xExp:resizeAs(x):copy(x):exp()
@@ -120,10 +119,6 @@ function optim.emd(opfunc, x, config, state)
       end
 
       local logZs = config.logZs:log():expandAs(x)
-
-      local logZs2 = x:clone():exp():sum(x:dim()):log():expandAs(x) 
-
-      assert(logZs:dist(logZs2) == 0)
 
       x:add(-1,logZs)
       if(checkNans) then
