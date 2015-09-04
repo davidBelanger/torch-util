@@ -107,7 +107,24 @@ function optim.emd(opfunc, x, config, state)
 
       local maxes = x:max(x:dim())
       x:add(-1,maxes:expandAs(x))
-      local logZs = x:clone():exp():sum(x:dim()):log():expandAs(x) 
+      --      local logZs = x:clone():exp():sum(x:dim()):log():expandAs(x) 
+
+      if(not config.logZs) then print(x:isContiguous()) end
+      config.xExp = config.xExp or x.new()
+
+      config.xExp:resizeAs(x):copy(x):exp()
+      if(not config.logZs) then
+         config.logZs = config.xExp:sum(x:dim())
+      else
+         torch.sum(config.logZs,config.xExp,x:dim())
+      end
+
+      local logZs = config.logZs:log():expandAs(x)
+
+      local logZs2 = x:clone():exp():sum(x:dim()):log():expandAs(x) 
+
+      assert(logZs:dist(logZs2) == 0)
+
       x:add(-1,logZs)
       if(checkNans) then
          local inf = 1/0
