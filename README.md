@@ -127,7 +127,7 @@ There are also some other useful torch code that we don't directly use in any of
 
 * `emd` this is an entropic mirror descent (ie exponentiated gradient) version of optim.sgd for optimization over the simplex. Here, the optimization variable is a tensor where it is assumed to sum to one over the innermost dimension. It provides all the same options (eg momentum) as optim.sgd. 
 
-* `SelfOuterProd` is an nn module that takes a tensor of size m and returns a flattened tensor of length m*m consisting of all pairwise terms in the tensor. This is done at the batch level, so input is of size b x m and output is of size b x (m*m).
+* `SelfOuterProd` is an nn module that takes a tensor of size m and returns a flattened tensor of length m x m consisting of all pairwise terms in the tensor. This is done at the batch level, so input is of size b x m and output is of size b x (m x m).
 
 * `OuterProd` is just like SelfOuterProd, except it takes two input tensors and returns a flattened tensor of their pairwise terms.
 
