@@ -3,8 +3,6 @@ get rid of the preprocess thing
 #ApplyModel 
 .lua file and shell script (write out the predictions somewhere. also map them back out to strings)
 
-move rnn stuff to this repo
-
 #switch train data preprocessing so that it's done up front once. 
 
 

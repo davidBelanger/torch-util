@@ -87,23 +87,16 @@ if(params.tokenFeatures == 1) then
     end
 end
 
-if(params.tokenLabels) then
-	labelprocessor = function(x) 
-		return x:view(x:nElement()) --to understand the necessity for this line, read the comment about MyReshape down below
-	end
-end
 
 if(params.tokenLabels or params.tokenFeatures)then
 	preprocess = function(a,b,c) 
-		return labelprocessor(a),tokenprocessor(b),c 
+		return labelprocessor(a),b,c 
 	end
 end
 
 local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess)
 local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTimeMinibatch,useCuda,preprocess)
 
-
-local convWidth = params.convWidth
 
 -----Define the Architecture-----
 local loadModel = params.initModel ~= ""
@@ -123,29 +116,29 @@ if(not loadModel) then
 
 
 	if(params.architecture == "rnn") then
-
+		predictor_net = nn.Sequential()
 		local rnn
 		if(params.rnnType == "lstm") then 
-			rnn = nn.LSTM(fullEmbeddingDim, params.rnnHidSize) --todo: add depth
+			rnn = nn.LSTM(embeddingDim, params.rnnHidSize) --todo: add depth
 		else
-			rnn = nn.RNN(fullEmbeddingDim, params.rnnHidSize) 
+			rnn = nn.RNN(embeddingDim, params.rnnHidSize) 
 		end
 
 		predictor_net:add(nn.SplitTable(1))
 		predictor_net:add(nn.Sequencer(rnn))
 
 		if(tokenLabels) then
-			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
+			predictor_net:add(nn.Sequencer(nn.Linear(params.rnnHidSize,params.labelDim)))
 		else
 			predictor_net:add(nn.SelectTable(-1))
 			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
 		end
 	else
 		predictor_net = nn.Sequential()
-		predictor_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,convWidth))
+		predictor_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,params.convWidth))
 		predictor_net:add(nn.ReLU())	
 		if(tokenLabels) then		
-			predictor_net:add(nn.TemporalConvolution(params.featureDim,params.labelDim)) 
+			predictor_net:add(nn.TemporalConvolution(params.featureDim,params.labelDim,1)) 
 		else
 			predictor_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
 			predictor_net:add(nn.Max(3))
@@ -159,7 +152,7 @@ if(not loadModel) then
 		--to do that, we absorb the time dimension into the minibatch dimension
 		--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
 		--desirable side-effect that the criterion now does this division automatically.
-		predictor_net:add(nn.MyReshape(-1,0,params.labelDim)) ---d: Tb  x E
+		--predictor_net:add(nn.MyReshape(-1,0,params.labelDim)) ---d: Tb  x E --todo: put back
 	end
 
 
@@ -177,16 +170,18 @@ end
 
 local use_log_likelihood = true
 local net  = nn.Sequential():add(embeddingLayer):add(predictor_net)
-local criterion
+
+
 if(use_log_likelihood) then
-	criterion= nn.ClassNLLCriterion()
-	training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
-	prediction_net = nn.Sequential():add(net):add(nn.SoftMax())
+	criterion= nn.SequencerCriterion(nn.ClassNLLCriterion())
+	training_net = nn.Sequential():add(net):add(nn.Sequencer(nn.LogSoftMax()))
+	prediction_net = nn.Sequential():add(net):add(nn.Sequencer(nn.SoftMax()))
 else
 	criterion = nn.MultiMarginCriterion()
 	training_net = net
 	prediction_net = net
 end
+--]]
 
 
 

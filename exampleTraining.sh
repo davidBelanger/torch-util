@@ -75,7 +75,7 @@ fi
 mkdir -p $exptDir
 
 modelBase=$exptDir/model
-options="$options -saveFrequency $saveFrequency -model $modelBase"
+options="$options -saveFrequency $saveFrequency -model $modelBase "
 cmd="th ModelTraining.lua $options"
 echo Executing:
 echo $cmd
