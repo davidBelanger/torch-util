@@ -135,7 +135,7 @@ if(not loadModel) then
 		predictor_net:add(nn.Sequencer(rnn))
 
 		if(tokenLabels) then
-			--todo: how do we map each of the timesteps' hidden states to a prediction?
+			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
 		else
 			predictor_net:add(nn.SelectTable(-1))
 			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
@@ -153,6 +153,7 @@ if(not loadModel) then
 		end
 	end
 
+	--todo: replace all of this stuff with a sequencer criterion
 	if(tokenLabels) then
 		--nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
 		--to do that, we absorb the time dimension into the minibatch dimension
