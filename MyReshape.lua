@@ -15,14 +15,6 @@ function MyReshape:__init(...)
       self.size[i] = arg[i]
    end
    self.batchsize:resize(#self.size)
-   --[[
-   self.nelement = 1
-   self.batchsize:resize(#self.size+1)
-   for i=1,#self.size do
-      self.nelement = self.nelement * self.size[i]
-      self.batchsize[i+1] = self.size[i]
-   end
-   --]]
    
    -- only used for non-contiguous input or gradOutput
    self._input = torch.Tensor()

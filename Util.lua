@@ -162,5 +162,14 @@ function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for th
 	if(not useCuda)then  return ti11 else return ti11:cuda() end
 end
 
+--this is copied from http://ericjmritz.name/2014/02/26/lua-is_array/
+function Util:isArray(t)
+    local i = 0
+    for _ in pairs(t) do
+        i = i + 1
+        if t[i] == nil then return false end
+    end
+    return true
+end
 
 
