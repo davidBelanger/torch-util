@@ -94,6 +94,8 @@ See `exampleTraining.sh` for a well-commented example of how we train models. Th
 
 Soon, we will also provide an example `exampleModelApplication.sh`, which will wrap `ModelPrediction.lua.` This takes held-out data and provides predictions. 
 
+## Architectures ##
+Execute `th ModelTraining.lua -h` to see all of its options. We support both convnets and RNNs. 
 
 ## Pretrained Word Embeddings ##
 In many applications of supervised deep learning for NLP, it can be very useful to initialize word embeddings using vectors that were pretrained on a large corpus. See examplePretrainedEmbeddings.sh for how to do the necessary preprocessing to load such vectors. This produces a .torch file of embeddings. Add the option -initEmbeddings <.torch file> to use these. 
