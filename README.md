@@ -10,7 +10,7 @@ This project provides utility code and examples for doing NLP in the torch deep 
 
 ### Architectures: ###
 * Convolutional NNs
-* RNNs (LSTMs, GRUs, etc) coming soon
+* RNNs, including LSTMs and bidirectional versions 
 
 ## Labels and Features ##
 
