@@ -55,7 +55,7 @@ cmd:option('-rnnDepth',1,'rnn depth')
 cmd:option('-rnnHidSize',25,'rnn hidsize')
 
 local params = cmd:parse(arg)
-local seed = 1234
+local seed = 12345
 torch.manualSeed(seed)
 
 local useCuda = params.cuda == 1
@@ -87,10 +87,17 @@ if(params.tokenFeatures == 1) then
     end
 end
 
+if(params.tokenLabels) then
+	labelprocessor = function(x) 
+		return x:view(x:nElement()) --to understand the necessity for this line, read the comment about MyReshape down below
+	end
+end
+
+
 
 if(params.tokenLabels or params.tokenFeatures)then
 	preprocess = function(a,b,c) 
-		return labelprocessor(a),b,c 
+		return labelprocessor(a),tokenprocessor(b),c 
 	end
 end
 
@@ -119,16 +126,25 @@ if(not loadModel) then
 		predictor_net = nn.Sequential()
 		local rnn
 		if(params.rnnType == "lstm") then 
-			rnn = nn.LSTM(embeddingDim, params.rnnHidSize) --todo: add depth
+			rnn = function() return nn.LSTM(embeddingDim, params.rnnHidSize) end --todo: add depth
 		else
-			rnn = nn.RNN(embeddingDim, params.rnnHidSize) 
+			rnn = function() return  nn.RNN(embeddingDim, params.rnnHidSize) end
 		end
 
-		predictor_net:add(nn.SplitTable(1))
-		predictor_net:add(nn.Sequencer(rnn))
+		predictor_net:add(nn.SplitTable(2))
+		local hidStateSize
+		if(not params.bidirectional == 1) then
+			predictor_net:add(nn.Sequencer(rnn()))
+			hidStateSize = params.rnnHidSize
+		else
+			predictor_net:add(nn.BiSequencer(rnn(),rnn())) --todo: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
+			hidStateSize = params.rnnHidSize*2
+		end
 
 		if(tokenLabels) then
-			predictor_net:add(nn.Sequencer(nn.Linear(params.rnnHidSize,params.labelDim)))
+			predictor_net:add(nn.Sequencer(nn.Reshape(1,hidStateSize,true)))
+			predictor_net:add(nn.JoinTable(2,3))
+			predictor_net:add(nn.TemporalConvolution(hidStateSize,params.labelDim,1))
 		else
 			predictor_net:add(nn.SelectTable(-1))
 			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
@@ -152,7 +168,7 @@ if(not loadModel) then
 		--to do that, we absorb the time dimension into the minibatch dimension
 		--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
 		--desirable side-effect that the criterion now does this division automatically.
-		--predictor_net:add(nn.MyReshape(-1,0,params.labelDim)) ---d: Tb  x E --todo: put back
+		predictor_net:add(nn.MyReshape(-1,0,params.labelDim)) ---d: Tb  x E 
 	end
 
 
@@ -171,18 +187,15 @@ end
 local use_log_likelihood = true
 local net  = nn.Sequential():add(embeddingLayer):add(predictor_net)
 
-
 if(use_log_likelihood) then
-	criterion= nn.SequencerCriterion(nn.ClassNLLCriterion())
-	training_net = nn.Sequential():add(net):add(nn.Sequencer(nn.LogSoftMax()))
-	prediction_net = nn.Sequential():add(net):add(nn.Sequencer(nn.SoftMax()))
+	criterion= nn.ClassNLLCriterion()
+	training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
+	prediction_net = nn.Sequential():add(net):add(nn.SoftMax())
 else
 	criterion = nn.MultiMarginCriterion()
 	training_net = net
 	prediction_net = net
 end
---]]
-
 
 
 if(useCuda) then 

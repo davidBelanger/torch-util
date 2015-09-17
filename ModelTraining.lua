@@ -1,6 +1,7 @@
 require 'torch'
 require 'nn'
 require 'optim'
+require 'rnn'
 
 --Dependencies from this package
 require 'MinibatcherFromFile'
@@ -33,7 +34,6 @@ cmd:option('-initModel',"",'model checkpoint to initialize from')
 
 
 cmd:option('-featureDim',15,'dimensionality of 2nd layer features')
-cmd:option('-convWidth',3,'width of convolutions')
 cmd:option('-tokenFeatures',0,'whether to embed features')
 cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the feature embedding')
 cmd:option('-testTimeMinibatch',3200,'max size of batches at test time (make this as big as your machine can handle')
@@ -43,8 +43,19 @@ cmd:option('-saveFrequency',25,'how often to save a model checkpoint')
 cmd:option('-embeddingL2',0,'extra l2 regularization term on the embedding weights')
 cmd:option('-l2',0,'l2 regularization term on all weights')
 
+cmd:option('-architecture',"cnn",'cnn or rnn')
+
+--CNN-specific options
+cmd:option('-convWidth',3,'width of convolutions')
+
+--RNN-specific options
+cmd:option('-bidirectional',0,'whether to use bidirectional RNN')
+cmd:option('-rnnType',"lstm",'lstm or rnn')
+cmd:option('-rnnDepth',1,'rnn depth')
+cmd:option('-rnnHidSize',25,'rnn hidsize')
+
 local params = cmd:parse(arg)
-local seed = 1234
+local seed = 12345
 torch.manualSeed(seed)
 
 local useCuda = params.cuda == 1
@@ -82,6 +93,8 @@ if(params.tokenLabels) then
 	end
 end
 
+
+
 if(params.tokenLabels or params.tokenFeatures)then
 	preprocess = function(a,b,c) 
 		return labelprocessor(a),tokenprocessor(b),c 
@@ -92,11 +105,9 @@ local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,u
 local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTimeMinibatch,useCuda,preprocess)
 
 
-local convWidth = params.convWidth
-
 -----Define the Architecture-----
 local loadModel = params.initModel ~= ""
-local transfer_net
+local predictor_net
 local embeddingLayer
 if(not loadModel) then
 
@@ -111,41 +122,71 @@ if(not loadModel) then
 	end
 
 
+	if(params.architecture == "rnn") then
+		predictor_net = nn.Sequential()
+		local rnn
+		if(params.rnnType == "lstm") then 
+			rnn = function() return nn.LSTM(embeddingDim, params.rnnHidSize) end --todo: add depth
+		else
+			rnn = function() return  nn.RNN(embeddingDim, params.rnnHidSize) end
+		end
 
-	transfer_net = nn.Sequential()
-	transfer_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,convWidth))
-	transfer_net:add(nn.ReLU())
+		predictor_net:add(nn.SplitTable(2))
+		local hidStateSize
+		if(not params.bidirectional == 1) then
+			predictor_net:add(nn.Sequencer(rnn()))
+			hidStateSize = params.rnnHidSize
+		else
+			predictor_net:add(nn.BiSequencer(rnn(),rnn())) --todo: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
+			hidStateSize = params.rnnHidSize*2
+		end
 
+		if(tokenLabels) then
+			predictor_net:add(nn.Sequencer(nn.Reshape(1,hidStateSize,true)))
+			predictor_net:add(nn.JoinTable(2,3))
+			predictor_net:add(nn.TemporalConvolution(hidStateSize,params.labelDim,1))
+		else
+			predictor_net:add(nn.SelectTable(-1))
+			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
+		end
+	else
+		predictor_net = nn.Sequential()
+		predictor_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,params.convWidth))
+		predictor_net:add(nn.ReLU())	
+		if(tokenLabels) then		
+			predictor_net:add(nn.TemporalConvolution(params.featureDim,params.labelDim,1)) 
+		else
+			predictor_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
+			predictor_net:add(nn.Max(3))
+			predictor_net:add(nn.Linear(params.featureDim,params.labelDim))		
+		end
+	end
+
+	--todo: replace all of this stuff with a sequencer criterion
 	if(tokenLabels) then
-		--it's lame that nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
+		--nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
 		--to do that, we absorb the time dimension into the minibatch dimension
-		transfer_net:add(nn.MyReshape(-1,0,params.featureDim)) ---d: Tb  x E
 		--note that any reasonable token-wise training criterion divides the loss by the minibatch_size * num_tokens_per_example (so that the step size is nondimensional). The above hack actually has the 
 		--desirable side-effect that the criterion now does this division automatically.
-
-		transfer_net:add(nn.Linear(params.featureDim,params.labelDim)) 
-	else
-		transfer_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
-		transfer_net:add(nn.Max(3))
-		transfer_net:add(nn.Linear(params.featureDim,params.labelDim))
+		predictor_net:add(nn.MyReshape(-1,0,params.labelDim)) ---d: Tb  x E 
 	end
 
 
 	if(useCuda) then
 		embeddingLayer:cuda()
-		transfer_net:cuda()
+		predictor_net:cuda()
 	end
 
 else
 	print('initializing model from '..params.initModel)
 	local checkpoint = torch.load(params.initModel)
-	transfer_net = checkpoint.transfer_net
+	predictor_net = checkpoint.predictor_net
 	embeddingLayer = checkpoint.embeddingLayer
 end
 
 local use_log_likelihood = true
-local net  = nn.Sequential():add(embeddingLayer):add(transfer_net)
-local criterion
+local net  = nn.Sequential():add(embeddingLayer):add(predictor_net)
+
 if(use_log_likelihood) then
 	criterion= nn.ClassNLLCriterion()
 	training_net = nn.Sequential():add(net):add(nn.LogSoftMax())
@@ -155,7 +196,6 @@ else
 	training_net = net
 	prediction_net = net
 end
-
 
 
 if(useCuda) then 
@@ -220,7 +260,7 @@ if(params.model  ~= "") then
 		print('saving to '..file)
 		local toSave = {
 			embeddingLayer = embeddingLayer,
-			transfer_net = transfer_net, 
+			predictor_net = predictor_net, 
 		}
 		torch.save(file,toSave) 
 	end

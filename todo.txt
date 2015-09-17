@@ -1,4 +1,4 @@
-get rid of the preprocess thing
+I don't like the sequencercriterion stuff. go back to reshaping. need to figure out how to add a jointable to rnn output. 
 
 #ApplyModel 
 .lua file and shell script (write out the predictions somewhere. also map them back out to strings)
