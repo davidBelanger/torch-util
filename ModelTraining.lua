@@ -134,10 +134,14 @@ if(not loadModel) then
 		predictor_net:add(nn.SplitTable(2))
 		local hidStateSize
 		if(not params.bidirectional == 1) then
-			predictor_net:add(nn.Sequencer(rnn()))
+			for d = 1,params.rnnDepth then
+				predictor_net:add(nn.Sequencer(rnn()))
+			end
 			hidStateSize = params.rnnHidSize
 		else
-			predictor_net:add(nn.BiSequencer(rnn(),rnn())) --todo: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
+			for d = 1,params.rnnDepth then
+				predictor_net:add(nn.BiSequencer(rnn(),rnn())) --todo: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
+			end
 			hidStateSize = params.rnnHidSize*2
 		end
 
