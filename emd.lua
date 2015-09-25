@@ -105,8 +105,13 @@ function optim.emd(opfunc, x, config, state)
          x:mul(invTemperature)
       end
 
-      local maxes = x:max(x:dim())
-      x:add(-1,maxes:expandAs(x))
+      if(config.maxes) then
+         torch.max(config.maxes,x,x:dim())
+      else
+         config.maxes = x:max(x:dim())
+      end
+
+      x:add(-1,config.maxes:expandAs(x))
       --      local logZs = x:clone():exp():sum(x:dim()):log():expandAs(x) 
 
       config.xExp = config.xExp or x.new()
