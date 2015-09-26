@@ -128,47 +128,53 @@ if(not loadModel) then
 		predictor_net = nn.Sequential()
 		local rnn
 		if(params.rnnType == "lstm") then 
-			rnn = function() return nn.LSTM(embeddingDim, params.rnnHidSize) end --todo: add depth
+			rnn = function() return nn.LSTM(embeddingDim, params.rnnHidSize) end 
 		else
 			rnn = function() return  nn.RNN(embeddingDim, params.rnnHidSize) end
 		end
 
-		predictor_net:add(nn.SplitTable(2))
+		predictor_net:add(nn.SplitTable(2)) --the sequencer expects a table of inputs, but the input data is in one tensor, so we split along the time axis
 		local hidStateSize
 		if(not params.bidirectional == 1) then
 			for d = 1,params.rnnDepth then
-				predictor_net:add(nn.Sequencer(rnn()))
+				predictor_net:add(nn.Sequencer(rnn())) --you should never use an nn.LSTM or nn.RNN directly. The Sequencer is what gives the torch API for :forward() and :backward()
 			end
 			hidStateSize = params.rnnHidSize
 		else
 			for d = 1,params.rnnDepth then
-				predictor_net:add(nn.BiSequencer(rnn(),rnn())) --todo: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
+				predictor_net:add(nn.BiSequencer(rnn(),rnn())) --Note: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
 			end
 			hidStateSize = params.rnnHidSize*2
 		end
 
 		if(tokenLabels) then
+			--These lines perform local linear classification of each token, using its LSTM state.
+			--Note: tt would have been more elegant to use a Sequencer(nn.Linear(hidStateSize,params.labelDim)) to do the classification. 
+			--However, that would require then using a SequencerCriterion(). This is bad because SequencerCriterion runs serially along the time axis
+			--Using a proper multi-dimensional criterion, like we do, exploits substantially more parallelism, esp on the GPU. 
 			predictor_net:add(nn.Sequencer(nn.Reshape(1,hidStateSize,true)))
 			predictor_net:add(nn.JoinTable(2,3))
 			predictor_net:add(nn.TemporalConvolution(hidStateSize,params.labelDim,1))
 		else
+			assert(not params.bidirectional == 1,"not configured to use a bidirectional rnn to get a sentence-level representation.")
+			--this grabs the final right-most hidden state and uses this to represent the sentence.
 			predictor_net:add(nn.SelectTable(-1))
 			predictor_net:add(nn.Linear(params.rnnHidSize,params.labelDim))
 		end
 	else
 		predictor_net = nn.Sequential()
+		--with the convnet, be careful to make sure that the convWidth is consistent with how padding was added in preprocessing
 		predictor_net:add(nn.TemporalConvolution(embeddingDim,params.featureDim,params.convWidth))
 		predictor_net:add(nn.ReLU())	
 		if(tokenLabels) then		
-			predictor_net:add(nn.TemporalConvolution(params.featureDim,params.labelDim,1)) 
+			predictor_net:add(nn.TemporalConvolution(params.featureDim,params.labelDim,1))  --this convolution is just doing local classification.
 		else
-			predictor_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis
+			predictor_net:add(nn.Transpose({2,3})) --this line and the next perform max pooling over the time axis. Feel free to change to alternative pooling operations, like sum pooling.
 			predictor_net:add(nn.Max(3))
 			predictor_net:add(nn.Linear(params.featureDim,params.labelDim))		
 		end
 	end
 
-	--todo: replace all of this stuff with a sequencer criterion
 	if(tokenLabels) then
 		--nn.LogSoftMax only can handle 2d tensors. it should be able to just go over the innermost dimension. rather than changing that, we reshape our data to be 2d
 		--to do that, we absorb the time dimension into the minibatch dimension
