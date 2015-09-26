@@ -39,6 +39,8 @@ cmd:option('-featureEmbeddingSpec',"",'file containing dimensions for the featur
 cmd:option('-testTimeMinibatch',3200,'max size of batches at test time (make this as big as your machine can handle')
 cmd:option('-initEmbeddings',"",'file to initialize embeddings from')
 cmd:option('-saveFrequency',25,'how often to save a model checkpoint')
+cmd:option('-shuffle',0,'whether to shuffle the training data after taking a pass through it. mostly useful for small training data')
+
 
 cmd:option('-embeddingL2',0,'extra l2 regularization term on the embedding weights')
 cmd:option('-l2',0,'l2 regularization term on all weights')
@@ -101,7 +103,7 @@ if(params.tokenLabels or params.tokenFeatures)then
 	end
 end
 
-local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess)
+local trainBatcher = MinibatcherFromFileList(params.trainList,params.minibatch,useCuda,preprocess,params.shuffle == 1)
 local testBatcher = OnePassMiniBatcherFromFileList(params.testList,params.testTimeMinibatch,useCuda,preprocess)
 
 
