@@ -126,6 +126,8 @@ def main():
 	tokenLabels = args.tokenLabels == 1
 	for line in fileinput.input(args.input):
 		fields = line.split("\t")
+		if len(fields) !=2:
+			continue
 		labelString = fields[0]
 		text = fields[1].rstrip()
 		toks = tokenize(text)
