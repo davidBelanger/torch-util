@@ -133,7 +133,7 @@ if(not loadModel) then
 
 		predictor_net:add(nn.SplitTable(2))
 		local hidStateSize
-		if(not params.bidirectional == 1) then
+		if(not (params.bidirectional == 1)) then
 			predictor_net:add(nn.Sequencer(rnn()))
 			hidStateSize = params.rnnHidSize
 		else
