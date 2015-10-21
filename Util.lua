@@ -23,6 +23,39 @@ function Util:printRow(t)
 	end
 	io.write('\n')
 end
+
+function Util:printMatMatlab(t)
+	assert(t:dim() == 2)
+	io.write('[')
+	for i = 1,t:size(1) do
+		for j = 1,(t:size(2)-1) do
+			io.write(t[i][j]..",")
+		end
+		io.write(t[i][t:size(2)])
+		if(i < t:size(1) ) then
+			io.write(';')
+		end
+	end
+	io.write(']\n')
+end
+
+function Util:printRow(t)
+	assert(t:dim() == 1)
+	local num = t:size(1)
+	for i = 1,num do
+		io.write(t[i].." ")
+	end
+	io.write('\n')
+end
+
+function Util:printMat(t)
+	assert(t:dim() == 2)
+	for i = 1,t:size(1) do
+		Util:printRow(t[i])
+	end
+end
+
+
 function Util:loadMap(file)
 	print(string.format('reading from %s',file))
 	local map = {}
@@ -143,7 +176,7 @@ end
 
 --TODO: could this be improved by allocating ti11 on as a cuda tensor at the beginning?
 function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for the common use case that we pass it zero-indexed values
-	local ti11 = nil
+	local ti11
 	local shift = shift or false
 
 	if(useCuda) then
@@ -159,7 +192,7 @@ function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for th
 			ti11[i][j][v] = 1
 		end
 	end
-	if(not useCuda)then  return ti11 else return ti11:cuda() end
+	return ti11 
 end
 
 --this is copied from http://ericjmritz.name/2014/02/26/lua-is_array/
