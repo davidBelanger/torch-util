@@ -231,7 +231,7 @@ table.insert(regularization.l2,params.embeddingL2)
 table.insert(regularization.params,embeddingLayer)
 
 table.insert(regularization.l2,params.l2)
-table.insert(regularization.params,training_net)
+table.insert(regularization.params,predictor_net)
 -----------------------------------	
 
 --------Initialize Optimizer-------
