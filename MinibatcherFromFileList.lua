@@ -13,7 +13,7 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess,shuff
 
 	for file in io.lines(fileList) do
 		local batch  = MinibatcherFromFile(file,batchSize,cuda,shuffle)
-		table.insert(counts,batch.numRows)
+		table.insert(counts,batch:numRows())
 		table.insert(self.batches,batch)
 	end
 	self.weights = torch.Tensor(counts)

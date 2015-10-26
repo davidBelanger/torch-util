@@ -6,7 +6,7 @@ function SparseMinibatcherFromFile:length(t)
 end
 
 function SparseMinibatcherFromFile:recursiveCuda(t)
-	if(torch.isTensor(t)) 
+	if(torch.isTensor(t))  then
 		return t:cuda() 
 	else
 		for k,v in ipairs(t) do
@@ -37,17 +37,17 @@ function SparseMinibatcherFromFile:__init(loaded,batchSize,cuda,shuffle)
 		self.data = loaded.data
 	end
 
-	self.numRows = self.data:size(1)
+	self.numRows = self:length(self.data)
 	self.curStart = 1
 	self.curStartSequential = 1
 end
 
 function SparseMinibatcherFromFile:shuffle()
 	if(self.doShuffle) then
-		 local inds = torch.randperm(self:length(self.labels):long()
+		 local inds = torch.randperm(self:length(self.labels)):long()
 		 if(self.sparseLabels) then
 		 	local t = {}
-		 	for i = 1,inds:size(1)
+		 	for i = 1,inds:size(1) do
 		 		table.insert(t,self.labels[i])
 		 	end
 		 	self.labels = t
@@ -57,7 +57,7 @@ function SparseMinibatcherFromFile:shuffle()
 
 		 if(self.sparseFeatures) then
 		 	local t = {}
-		 	for i = 1,inds:size(1)
+		 	for i = 1,inds:size(1) do
 		 		table.insert(t,self.data[i])
 		 	end
 		 	self.data = t
@@ -73,7 +73,7 @@ end
 function SparseMinibatcherFromFile:tableSlice(tab,start,len)
 	--TODO: do some fancy thing with metatables
 	local t = {}
-	for i = start,(start + len)
+	for i = start,(start + len) do
 		table.insert(t,tab[i])
 	end
 	return t
