@@ -73,8 +73,8 @@ end
 function SparseMinibatcherFromFile:tableSlice(tab,start,len)
 	--TODO: do some fancy thing with metatables
 	local t = {}
-	for i = start,(start + len) do
-		table.insert(t,tab[i])
+	for i = 1,len do
+		table.insert(t,tab[start + i])
 	end
 	return t
 end
@@ -110,6 +110,7 @@ function  SparseMinibatcherFromFile:getBatch()
 		num_actual_data = self.unpadded_len - startIdx +1 
 	end
 	
+	assert(l1 == l2, l1.." vs. "..l2)
 	return batch_labels,batch_data, num_actual_data
 end
 
