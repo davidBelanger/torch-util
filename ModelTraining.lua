@@ -227,13 +227,11 @@ local regularization = {
     l2 = {},
 	params = {}
 }
-local embeddingL2 = params.embeddingL2
-table.insert(regularization.l2,params.l2)
+table.insert(regularization.l2,params.embeddingL2)
 table.insert(regularization.params,embeddingLayer)
 
-local convL2 = params.l2
-table.insert(regularization.l2,convL2)
-table.insert(regularization.params,training_net)
+table.insert(regularization.l2,params.l2)
+table.insert(regularization.params,predictor_net)
 -----------------------------------	
 
 --------Initialize Optimizer-------
