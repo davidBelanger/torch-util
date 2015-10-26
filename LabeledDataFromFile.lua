@@ -1,9 +1,6 @@
 local LabeledDataFromFile = torch.class('LabeledDataFromFile')
 
-function LabeledDataFromFile:__init(file,pad,blocksize)
-	print(string.format('reading data from %s',file))
-
-	local loaded = torch.load(file)
+function LabeledDataFromFile:__init(loaded,pad,blocksize)
 	if(pad) then
 		self.labels, self.labels_pad = self:padTensor(loaded.labels,blocksize)
 		self.inputs, self.inputs_pad = self:padTensor(loaded.data,blocksize)

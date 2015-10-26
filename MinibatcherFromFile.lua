@@ -5,7 +5,12 @@ local MinibatcherFromFile = torch.class('MinibatcherFromFile')
 function MinibatcherFromFile:__init(file,batchSize,cuda,shuffle)
 	self.batchSize = batchSize
 	self.doShuffle = shuffle
-	local loaded = LabeledDataFromFile(file,cuda,batchSize) 
+	print('reading from '..file)
+	local loadedData = torch.load(file)
+	if(loaded.isSparse) then return SparseMinibatcherFromFile(loadedData,cuda,batchSize,shuffle) end
+
+	local loaded = LabeledDataFromFile(loadedData,cuda,batchSize) 
+
 	self.unpadded_len = loaded.unpadded_len
 	assert(self.unpadded_len ~= nil)
 
