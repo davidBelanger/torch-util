@@ -2,10 +2,17 @@ local MapReduce, parent = torch.class('nn.MapReduce', 'nn.Container')
 
 
 function MapReduce:__init(mapper,reducer)
-	parent:__init()
+	parent:__init(self)
+
+	local dd = torch.rand(32,16):mul(25):ceil()
+	mapper:forward(dd)
+
 	self.mapper = mapper
 	self.reducer = reducer
 
+
+
+    self.modules = {}
 	table.insert(self.modules,mapper)
 	table.insert(self.modules,reducer)
 
@@ -13,6 +20,7 @@ end
 
 function MapReduce:updateOutput(input)
 	--first, reshape the data by pulling the second dimension into the first
+
 	self.inputSize = input:size()
 	local numPerExample = self.inputSize[2]
 	local minibatchSize = self.inputSize[1]
@@ -22,8 +30,8 @@ function MapReduce:updateOutput(input)
 		self.sizes[i] = self.inputSize[i+1]
 	end
 
-	self.reshapedInput = input:reshape(self.sizes)
-	self.mapped = self.mapper:forward(self.reshapedInput)
+	self.reshapedInput = input:view(self.sizes)
+	self.mapped = self.mapper:updateOutput(self.reshapedInput)
 	self.sizes3 = self.mapped:size()
 
 	self.sizes2 = self.sizes2 or torch.LongStorage(self.mapped:dim() + 1)
@@ -34,8 +42,8 @@ function MapReduce:updateOutput(input)
 		self.sizes2[i+1] = self.mapped:size(i)
 	end
 
-	self.mappedAndReshaped = self.mapped:reshape(self.sizes2)
-	self.output = self.reducer:forward(self.mappedAndReshaped)
+	self.mappedAndReshaped = self.mapped:view(self.sizes2)
+	self.output = self.reducer:updateOutput(self.mappedAndReshaped)
 	return self.output
 
 end
@@ -67,12 +75,12 @@ function MapReduce:genericBackward(operator,input, gradOutput)
 	self.reducer:backward(self.mappedAndReshaped,db:clone():fill(1.0))
 	operator(self.reducer,self.mappedAndReshaped,gradOutput)
 	local reducerGrad = self.reducer.gradInput
-	local reshapedReducerGrad = reducerGrad:reshape(self.sizes3)
+	local reshapedReducerGrad = reducerGrad:view(self.sizes3)
 
 
 	operator(self.mapper,self.reshapedInput,reshapedReducerGrad) 
 	local mapperGrad = self.mapper.gradInput
 
-	self.gradInput = (mapperGrad:dim() > 0) and mapperGrad:reshape(self.inputSize) or nil --some modules return nil from backwards, such as the lookup table
+	self.gradInput = (mapperGrad:dim() > 0) and mapperGrad:view(self.inputSize) or nil --some modules return nil from backwards, such as the lookup table
 	return self.gradInput
 end

@@ -8,6 +8,12 @@ name=example #use this to give some informative name to the processed data files
 trainFile=pos/trn.pos.proc
 devFile=pos/dev.pos.proc
 testFile=pos/tst.pos.proc
+
+/iesl/canvas/beroth/tac/patternmatches.final.mapped
+dsfile=/iesl/canvas/beroth/tac/data/merge_2013.tab
+devfile=/iesl/canvas/beroth/tac/data/candidates2009-2012
+
+
 tokLabels=1 #whether the input has labels at the token level (alternative: at the sentence level)
 allFiles="$trainFile:train $devFile:dev $testFile:test" #if there are more files (eg a second dev set) just specify it here
 
