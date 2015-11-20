@@ -100,7 +100,7 @@ def main():
 		
 		for ff in glob.glob('{}*.int'.format(args["outNameForDataset"])):
 			args["ff"] = ff
-			cmd="out=`echo $ff | sed 's|.int$||'`.torch;%(int2torch)s -input %(ff)s -output $out -tokenLabels %(tokLabels)s -tokenFeatures %(tokFeats)s %(addOne)s;echo $out >> %(outDir)s/%(dataset)s.list" % args
+			cmd="out=`echo %(ff)s | sed 's|.int$||'`.torch;%(int2torch)s -input %(ff)s -output $out -tokenLabels %(tokLabels)s -tokenFeatures %(tokFeats)s %(addOne)s;echo $out >> %(outDir)s/%(dataset)s.list" % args
 			syscall(cmd)
 
 
