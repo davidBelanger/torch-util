@@ -26,7 +26,7 @@ function MinibatcherFromFile:__init(file,batchSize,cuda,shuffle)
 			self.data = loaded.inputs_pad
 		end
 		assert(self.labels:size(1) == self.data:size(1))
-		self.numRows = self.data:size(1)
+		self.numRowsValue = self.data:size(1)
 		self.curStart = 1
 		self.curStartSequential = 1
 	end
@@ -34,7 +34,7 @@ end
 
 function MinibatcherFromFile:numRows()
 	if(self.isSparse) then return self.sparseBatcher.numRows end
-	return self.numRows
+	return self.numRowsValue
 end
 
 function MinibatcherFromFile:shuffle()
@@ -54,7 +54,7 @@ function  MinibatcherFromFile:getBatch()
 	local startIdx = self.curStart
 	local endIdx = startIdx + self.batchSize-1
 
-	endIdx = math.min(endIdx,self.numRows)
+	endIdx = math.min(endIdx,self.numRowsValue)
 	self.curStart = endIdx +1
 	if(self.curStart > self.unpadded_len) then
 		self.curStart = 1
@@ -83,7 +83,7 @@ function  MinibatcherFromFile:getBatchSequential()
 	local startIdx = self.curStartSequential
 	local endIdx = startIdx + self.batchSize-1
 
-	endIdx = math.min(endIdx,self.numRows)
+	endIdx = math.min(endIdx,self.numRowsValue)
 	self.curStartSequential = endIdx +1
 	if(startIdx > self.unpadded_len) then
 		return nil
