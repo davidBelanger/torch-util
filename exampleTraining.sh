@@ -22,6 +22,8 @@ log=$exptDir/log.txt #where everything will be logged
 saveFrequency=5 #how often to checkpoint
 
 #training options
+architecture=rnn
+rnnType=lstm
 lr=0.1 #learning rate. TODO: make a more verbose framework for specifying optimization options on the command line
 gpuid=-1 #if >= 0, then do computation on GPU
 minibatch=32 #if using gpu, minibatch sizes needs to be a multiple of 32.
@@ -38,7 +40,7 @@ vocabSize=`cat $d/domain.domainSizes.txt  | grep '^tokenString' | cut -f2`
 
 #see ModelTraining.lua for documentation of its command line options
 dataOptions="$d/train.list -testList $d/dev.list -tokenFeatures $tokFeats -tokenLabels $tokLabels -labelDim $labelDim -vocabSize $vocabSize"
-options="-trainList $dataOptions -minibatch $minibatch -gpuid $gpuid  -learningRate $lr -l2 $l2 -embeddingL2 $embeddingL2"
+options="-trainList $dataOptions -minibatch $minibatch -gpuid $gpuid  -learningRate $lr -l2 $l2 -embeddingL2 $embeddingL2 -architecture $architecture -rnnType $rnnType"
 
 if [ "$initEmbeddings" != "" ]; then
 	options="$options -initEmbeddings $initEmbeddings"

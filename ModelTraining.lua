@@ -136,12 +136,12 @@ if(not loadModel) then
 		predictor_net:add(nn.SplitTable(2)) --the sequencer expects a table of inputs, but the input data is in one tensor, so we split along the time axis
 		local hidStateSize
 		if(not params.bidirectional == 1) then
-			for d = 1,params.rnnDepth then
+			for d = 1,params.rnnDepth do
 				predictor_net:add(nn.Sequencer(rnn())) --you should never use an nn.LSTM or nn.RNN directly. The Sequencer is what gives the torch API for :forward() and :backward()
 			end
 			hidStateSize = params.rnnHidSize
 		else
-			for d = 1,params.rnnDepth then
+			for d = 1,params.rnnDepth do
 				predictor_net:add(nn.BiSequencer(rnn(),rnn())) --Note: you can give a third option to BiSequencer for more sophisticated combination of the two hidden states
 			end
 			hidStateSize = params.rnnHidSize*2
