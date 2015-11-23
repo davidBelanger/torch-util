@@ -5,6 +5,10 @@ import os
 import glob
 from subprocess import check_call
 
+##TODO: what to do about annotation (shouldn't expect that to be at the sentence level)
+#we should really be taking two files as input
+
+
 def main():
 
 	parser = argparse.ArgumentParser()
@@ -42,6 +46,8 @@ def main():
 	args['makeFeatures']="python {}/featureExtraction.py".format(scriptPath)
 	args['addOne']="-addOne 1" #use this if preprocessing is 0-indexed. set this to the empty string if your preprocessing is 1-indexed. (featureExtraction.py is 0-indexed)
 	args['splitByLength']="python {}/splitByLength.py".format(scriptPath)
+	args['stringToInt']="python {}/stringToInt.py".format(scriptPath)
+
 	args['int2torch']="th {}/int2torch.lua".format(scriptPath)
 	args["domainName"]="%(outDir)s/domain" % args
 	args["featureSpec"]="-tokenFeatures %(tokFeats)s  -tokenLabels %(tokLabels)s -featureTemplates %(featureTemplates)s" % args
@@ -60,7 +66,11 @@ def main():
 	cmd = "cut -f2- %(trainFile)s > %(trainFileNoGroups)s" % args
 	syscall(cmd)
 
-	cmd = "%(makeFeatures)s -input %(trainFileNoGroups)s -makeDomain %(makeDomain)s -featureCountThreshold %(featureCountThreshold)s  -domain %(domainName)s -output %(output)s %(featureSpec)s -lengthRound %(lengthRounding)s -pad %(pad)s " % args
+
+	cmd = " awk '{print NF}' %(trainFileNoGroups)s  | sort -r -n | head -1" % args
+	targetLength = subprocess.check_output("cmd", shell=True)
+	args["targetLength"] = targetLength
+	cmd = "%(makeFeatures)s -input %(trainFileNoGroups)s -makeDomain %(makeDomain)s -featureCountThreshold %(featureCountThreshold)s  -domain %(domainName)s -output %(output)s %(featureSpec)s -lengthRound %(lengthRounding)s -fixedLengthPadding %(targetLength)s " % args
 	syscall(cmd)
 
 
@@ -91,38 +101,46 @@ def main():
 		syscall(cmd)
 
 		#this extracts features and writes out an intermediate ascii int
-		cmd = "%(makeFeatures)s -input %(dataFileNoGroups)s -makeDomain %(makeDomain)s -domain %(domainName)s -output %(output)s -pad %(pad)s %(lengthArgs)s %(featureSpec)s %(lengthArgs)s" % args
+		cmd = " awk '{print NF}' %(dataFileNoGroups)s  | sort -r -n | head -1" % args
+		targetLength = subprocess.check_output("cmd", shell=True)
+		args["targetLength"] = targetLength
+		cmd = "%(makeFeatures)s -input %(dataFileNoGroups)s -makeDomain %(makeDomain)s -domain %(domainName)s -output %(output)s -fixedLengthPadding %(targetLength)s %(featureSpec)s %(lengthArgs)s" % args
 		syscall(cmd)
 
-		#TODO: convert groupFile to ints
-		
+		cmd = "%(stringToInt)s %(dataFileNoGroups)s %(dataFileNoGroups)s.groupIds %(dataFileNoGroups)s.groupIdMapping" % args
+		syscall(cmd)
+
 
 		args["outDirForDataset"]="%(outDir)s/%(dataset)s" % args
 		args["outNameForDataset"]="%(outDirForDataset)s/%(dataset)s-" % args
 		cmd = "mkdir -p {}".format(args["outDirForDataset"])
 		syscall(cmd)
 
-		print("splitting {} by length".format(dataset))
-		args["outSuffix"]=".int"
-		#this splits the ascii int file into separate files where each file contains examples of the same length
-		cmd="%(splitByLength)s %(output)s %(outNameForDataset)s %(outSuffix)s" % args
+		#TODO: paste paste the group id on, and sort by the first column
+
+		cmd = "paste %(dataFileNoGroups)s.groupIds %(output)s | sort -n -k4 -r > %(output)s.grouped" %args
 		syscall(cmd)
 
-		#todo: system
+		print("splitting {} by num examples per group".format(dataset))
+		args["outSuffix"]=".int"
+		#this splits the ascii int file into separate files where each file contains groups with the same number of examples in it.
+		#TODO: replace this by split by # examples
+		cmd="%(splitByLength)s %(output)s %(outNameForDataset)s %(outSuffix)s" % args
+		syscall(cmd)
 
 		cmd=="rm -f {}/{}.list".format(outDir,dataset) #the downstream training code reads in this list of filenames of the data files, split by length
 		syscall(cmd)
 
-		#todo: system
-		print("converting {} to torch files".format(dataset))
-		
+		print("converting {} to torch files".format(dataset))		
 		for ff in glob.glob('{}*.int'.format(args["outNameForDataset"])):
 			args["ff"] = ff
+			#TODO: need a new script
 			cmd="out=`echo %(ff)s | sed 's|.int$||'`.torch;%(int2torch)s -input %(ff)s -output $out -tokenLabels %(tokLabels)s -tokenFeatures %(tokFeats)s %(addOne)s;echo $out >> %(outDir)s/%(dataset)s.list" % args
 			syscall(cmd)
 
 
 if __name__ == "__main__":
 	main()
+
 
 

@@ -101,6 +101,8 @@ def main():
 	parser.add_argument("-featureTemplates",type=str,help="comma-separated list of the names of the feature templates to use",default="tokenString,isCap,isNumeric")
 
 	parser.add_argument("-pad",type=int,help="how much to pad the input on each side",default=0)
+	parser.add_argument("-fixedLengthPadding",type=int,help="pad such that every sentence has this length.",default=0)
+
 	parser.add_argument("-lengthRound",type=int,help="pad such that all token sequences have length that is a multiple of lengthRound")
 	
 	#parser.add_argument("-minLength",type=int,help="minimum length of an observation sequence (after padding).")
@@ -140,7 +142,9 @@ def main():
 			labels = addPaddingForLengthRounding(labels,args.lengthRound,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
 		#this pads the tokens, but not the labels. this is useful when using CNNs
-		if(args.pad > 0):
+		if(args.fixedLengthPadding > 0): 
+			toks = addPaddingForFixedLength(toks,fixedLengthPadding,nlpFeatureConstants["padleft"])
+		else if(args.pad > 0):
 			toks = addPadding(toks,args.pad,nlpFeatureConstants["padleft"],nlpFeatureConstants["padright"])
 
 		normalizedToks = map(lambda st: normalize(st), toks)
@@ -219,6 +223,12 @@ def addPadding(toks,pad,leftStr,rightStr):
 	for i in range(0,pad):
 		toks.insert(0,leftStr)
 		toks.append(rightStr)
+	return toks
+
+def addPaddingForFixedLength(toks,targetLength,leftStr):
+	assert(len(toks) <= targetLength)
+	while(len(toks) < targetLength):
+		toks.insert(0,leftStr)
 	return toks
 
 if __name__ == "__main__":
