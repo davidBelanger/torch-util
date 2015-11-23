@@ -64,7 +64,8 @@ For many architectures, it will be necessary to pad your data. We describe easy 
 # Packages #
 
 ## Preprocessing ##
-See `exampleProcessing.sh` for a well-commented example of how we preprocess data. We perform the following steps:
+
+All of these commands are also depicted in `exampleProcessingCommands.sh`,  which preprocesses data completely in the shell. We perform the following steps:
 
 1. Construct 'domains' for features and for labels. A domain is simply a string to int mapping. This is constructed by taking an initial pass over the training data. Then, features that don't occur a minimum number of times are discarded. Finally, the string->int mapping is ordered such that frequent features have low int values (to improve memory locality).
 
