@@ -55,7 +55,12 @@ def main():
 	##first, establish string->int mappings for the feature templates
 	args["makeDomain"]=1
 	args["output"]="/dev/null"
-	cmd = "%(makeFeatures)s -input %(trainFile)s -makeDomain %(makeDomain)s -featureCountThreshold %(featureCountThreshold)s  -domain %(domainName)s -output %(output)s %(featureSpec)s -lengthRound %(lengthRounding)s -pad %(pad)s " % args
+	args["trainFileNoGroups"]="TODO"
+
+	cmd = "cut -f2- %(trainFile)s > %(trainFileNoGroups)s" % args
+	syscall(cmd)
+
+	cmd = "%(makeFeatures)s -input %(trainFileNoGroups)s -makeDomain %(makeDomain)s -featureCountThreshold %(featureCountThreshold)s  -domain %(domainName)s -output %(output)s %(featureSpec)s -lengthRound %(lengthRounding)s -pad %(pad)s " % args
 	syscall(cmd)
 
 
@@ -74,10 +79,23 @@ def main():
 		print("making features for {}".format(dataset))
 		args["file"] = file
 		args["dataset"] = dataset
-		#this extracts features and writes out an intermediate ascii int
-		cmd = "%(makeFeatures)s -input %(file)s -makeDomain %(makeDomain)s -domain %(domainName)s -output %(output)s -pad %(pad)s %(lengthArgs)s %(featureSpec)s %(lengthArgs)s" % args
+
+		args["dataFileNoGroups"]="TODO.data"
+
+		cmd = "cut -f2- %(file)s > %(dataFileNoGroups)s" % args
 		syscall(cmd)
 
+		args["groupFile"]="TODO.groups"
+
+		cmd = "cut -f1 %(file)s > %(groupFile)s" % args
+		syscall(cmd)
+
+		#this extracts features and writes out an intermediate ascii int
+		cmd = "%(makeFeatures)s -input %(dataFileNoGroups)s -makeDomain %(makeDomain)s -domain %(domainName)s -output %(output)s -pad %(pad)s %(lengthArgs)s %(featureSpec)s %(lengthArgs)s" % args
+		syscall(cmd)
+
+		#TODO: convert groupFile to ints
+		
 
 		args["outDirForDataset"]="%(outDir)s/%(dataset)s" % args
 		args["outNameForDataset"]="%(outDirForDataset)s/%(dataset)s-" % args
