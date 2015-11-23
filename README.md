@@ -64,8 +64,7 @@ For many architectures, it will be necessary to pad your data. We describe easy 
 # Packages #
 
 ## Preprocessing ##
-
-All of these commands are also depicted in `exampleProcessingCommands.sh`,  which preprocesses data completely in the shell. We perform the following steps:
+Check out exampleProcessing.sh for a well-documented example of how to call the data processing pipeline. This packages up command line arguments for a python script that makes lots os system calls. All of these commands are also depicted in `exampleProcessingCommands.sh`,  which preprocesses data completely in the shell. We perform the following steps:
 
 1. Construct 'domains' for features and for labels. A domain is simply a string to int mapping. This is constructed by taking an initial pass over the training data. Then, features that don't occur a minimum number of times are discarded. Finally, the string->int mapping is ordered such that frequent features have low int values (to improve memory locality).
 

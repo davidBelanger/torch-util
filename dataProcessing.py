@@ -63,7 +63,7 @@ def main():
 	args["makeDomain"]=0
 
 	for dataset,file in files.iteritems():
-		output="{}/$dataset.int.all".format(outDir)
+		output="{}/{}.int.all".format(outDir,dataset)
 		args["output"] = output
 		lenRound=0
 		if(dataset == "train"):

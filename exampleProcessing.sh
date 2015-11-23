@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 ##specification for the output data paths
 outDir=proc/
@@ -8,11 +9,6 @@ name=example #use this to give some informative name to the processed data files
 trainFile=pos/trn.pos.proc
 devFile=pos/dev.pos.proc
 testFile=pos/tst.pos.proc
-
-/iesl/canvas/beroth/tac/patternmatches.final.mapped
-dsfile=/iesl/canvas/beroth/tac/data/merge_2013.tab
-devfile=/iesl/canvas/beroth/tac/data/candidates2009-2012
-
 
 tokLabels=1 #whether the input has labels at the token level (alternative: at the sentence level)
 allFiles="$trainFile:train $devFile:dev $testFile:test" #if there are more files (eg a second dev set) just specify it here
@@ -30,65 +26,17 @@ featureCountThreshold=5
 lengthRounding=5 #this pads such that every token and label sequence has a length that is a multiple of <lengthRounding> (only used on train data)
 pad=1 #this puts <pad> dummy tokens on each side (important for CNNs). 
 
+#verbosity level
+verbose=1
 
-#script paths
-makeFeatures="python featureExtraction.py"
-addOne="-addOne 1" #use this if preprocessing is 0-indexed. set this to the empty string if your preprocessing is 1-indexed. (featureExtraction.py is 0-indexed)
-splitByLength="python splitByLength.py"
-int2torch="th int2torch.lua"
-domainName=$outDir/domain
+dataPaths="-trainFile $trainFile -devFile $devFile -testFile $testFile -name $name -outDir $outDir"
+dataOptions="-tokLabels $tokLabels -tokFeats $tokFeats -featureTemplates $featureTemplates -featureCountThreshold $featureCountThreshold -lengthRounding $lengthRounding -pad $pad"
 
-featureSpec="-tokenFeatures $tokFeats  -tokenLabels $tokLabels -featureTemplates $featureTemplates"
+#command to be run
+cmd="python dataProcessing.py  $dataPaths $dataOptions -verbose $verbose"
 
-#---------------Below this are things that you shouldn't need to change-------------------#
-
-##first, establish string->int mappings for the feature templates
-makeDomain=1
-output="/dev/null"
-echo $makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -domain $domainName -output $output $featureSpec -lengthRound $lengthRounding -pad $pad 
-
-$makeFeatures -input $trainFile -makeDomain $makeDomain -featureCountThreshold $featureCountThreshold  -domain $domainName -output $output $featureSpec -lengthRound $lengthRounding -pad $pad 
-
-
-makeDomain=0
-for f in $allFiles
-do 
-	file=`echo $f | cut -d":" -f1`
-	dataset=`echo $f | cut -d":" -f2`
-	output=$outDir/$dataset.int.all
-
-    lenRound=0
-	if [ "$dataset" == "train" ]; then
-		lenRound=$lengthRounding
-	fi
-	lengthArgs="-lengthRound $lenRound"
-
-	echo making features for $dataset
-	#this extracts features and writes out an intermediate ascii int
-	echo 	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs $featureSpec $lengthArgs
-
-	$makeFeatures -input $file -makeDomain $makeDomain -domain $domainName -output $output -pad $pad $lengthArgs $featureSpec $lengthArgs
-
-	outDirForDataset=$outDir/$dataset
-	outNameForDataset=$outDirForDataset/$dataset-
-	mkdir -p $outDirForDataset
-	echo splitting $dataset by length
-	outSuffix=.int
-	#this splits the ascii int file into separate files where each file contains examples of the same length
-	$splitByLength $output $outNameForDataset $outSuffix
-
-	rm -f $outDir/$dataset.list #the downstream training code reads in this list of filenames of the data files, split by length
-	echo converting $dataset to torch files
-	for ff in $outNameForDataset*.int 
-	do
-		out=`echo $ff | sed 's|.int$||'`.torch
-		
-		$int2torch -input $ff -output $out -tokenLabels $tokLabels -tokenFeatures $tokFeats $addOne #convert to torch format
-		echo $out >> $outDir/$dataset.list
-	done
-
-done
-
-
+echo executing:
+echo $cmd
+$cmd
 
 
