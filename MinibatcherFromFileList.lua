@@ -10,7 +10,6 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess,shuff
 	local counts = {}
 	self.debugMode = false
 	print(string.format('reading file list from %s',fileList))
-
 	for file in io.lines(fileList) do
 		local batch  = MinibatcherFromFile(file,batchSize,cuda,shuffle)
 		table.insert(counts,batch:numRows())
@@ -43,7 +42,7 @@ function  MinibatcherFromFileList:getBatch()
 end
 
 function MinibatcherFromFileList:getAllBatches()
-	local t = {}
+	local t = {}	
 	if(self.debugMode) then 
 		local x,y,z = self.preprocess(unpack(self.batches[1]:getBatch()))
 		table.insert(t,{x,y,z})

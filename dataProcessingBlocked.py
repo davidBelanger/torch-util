@@ -6,7 +6,7 @@ import glob
 from subprocess import check_call
 
 ##TODO: what to do about annotation (shouldn't expect that to be at the sentence level)
-#we should really be taking two files as input
+#we should really be taking two files as input. what would we do to model multi-label classification?
 
 
 def main():
@@ -26,8 +26,6 @@ def main():
 	parser.add_argument("-pad",type=int,default=0)
 
 	parser.add_argument("-verbose",type=int,default=0)
-
-	#todo: something where it forces everything to have the same length
 
 	args = parser.parse_args()
 	args = vars(args)
@@ -90,12 +88,12 @@ def main():
 		args["file"] = file
 		args["dataset"] = dataset
 
-		args["dataFileNoGroups"]="TODO.data"
+		args["dataFileNoGroups"]="{}.data".format(output)
 
 		cmd = "cut -f2- %(file)s > %(dataFileNoGroups)s" % args
 		syscall(cmd)
 
-		args["groupFile"]="TODO.groups"
+		args["groupFile"]="{}.groups".format(output)
 
 		cmd = "cut -f1 %(file)s > %(groupFile)s" % args
 		syscall(cmd)
