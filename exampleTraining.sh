@@ -13,7 +13,8 @@ tokLabels=1
 
 #optional use of pretrained word embeddings (this option not used if you specify initModel)
 #initEmbeddings= #use this if you don't want to use embeddings
-initEmbeddings=$d/embeddings
+initEmbeddings=
+#$d/embeddings
 
 
 #output 
@@ -25,7 +26,7 @@ saveFrequency=5 #how often to checkpoint
 architecture=rnn
 rnnType=lstm
 lr=0.1 #learning rate. TODO: make a more verbose framework for specifying optimization options on the command line
-gpuid=-1 #if >= 0, then do computation on GPU
+gpuid=1 #if >= 0, then do computation on GPU
 minibatch=32 #if using gpu, minibatch sizes needs to be a multiple of 32.
 l2=0.01
 embeddingL2=0.1
