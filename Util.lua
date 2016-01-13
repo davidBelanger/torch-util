@@ -15,6 +15,17 @@ function Util:splitByDelim(str,delim,convertFromString)
     return t
 end
 
+function Util:tableAsRowStr(t)
+	local num = #t
+	local str = ""
+	for i = 1,num do
+		str = str..t[i].." "
+	end	
+	str = str.."\n"
+	return str
+
+end
+
 function Util:printRow(t)
 	assert(t:dim() == 1)
 	local num = t:size(1)

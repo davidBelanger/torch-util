@@ -37,7 +37,8 @@ RETURN:
 function optim.emd(opfunc, x, config, state)
    -- (0) get/update state
    local config = config or {}
-   local state = state or config
+   assert(state)
+--   local state = state or config
    local lr = config.learningRate or 1e-3
    local lrd = config.learningRateDecay or 0
    local wd = config.weightDecay or 0
@@ -84,7 +85,7 @@ function optim.emd(opfunc, x, config, state)
 
    -- (4) learning rate decay (annealing)
    local clr = lr / math.pow(1 + nevals*lrd,learningRatePower)
-   
+   state.currentLearningRate = clr
 
    if(not logSpace) then
       dfdx:mul(-clr)
