@@ -59,6 +59,7 @@ cmd:option('-rnnHidSize',25,'rnn hidsize')
 local params = cmd:parse(arg)
 local seed = 12345
 torch.manualSeed(seed)
+print(params)
 
 local useCuda = params.cuda == 1
 local tokenLabels = params.tokenLabels == 1
@@ -135,7 +136,7 @@ if(not loadModel) then
 
 		predictor_net:add(nn.SplitTable(2)) --the sequencer expects a table of inputs, but the input data is in one tensor, so we split along the time axis
 		local hidStateSize
-		if(not params.bidirectional == 1) then
+		if(not (params.bidirectional == 1)) then
 			for d = 1,params.rnnDepth do
 				predictor_net:add(nn.Sequencer(rnn())) --you should never use an nn.LSTM or nn.RNN directly. The Sequencer is what gives the torch API for :forward() and :backward()
 			end
@@ -196,7 +197,7 @@ else
 	embeddingLayer = checkpoint.embeddingLayer
 end
 
-local use_log_likelihood = true
+local use_log_likelihood = true --todo :make a command line arg for this
 local net  = nn.Sequential():add(embeddingLayer):add(predictor_net)
 
 if(use_log_likelihood) then
