@@ -110,11 +110,14 @@ function Util:deepcopy(orig)
     return copy
 end
 
+local inf = 1/0
 function Util:assertNan(x,msg)
 	if(torch.isTensor(x))then
 		assert(x:eq(x):all(),msg)
+		assert(not x:eq(inf):any(),"inf: "..msg)
 	else
 		assert( x == x, msg)
+		assert(x ~= inf,"inf: "..msg)
 	end
 end
 
@@ -185,10 +188,9 @@ function Util:mapLookup(ints,map)
 	return map
 end
 
---TODO: could this be improved by allocating ti11 on as a cuda tensor at the beginning?
 function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for the common use case that we pass it zero-indexed values
 	local ti11
-	local shift = shift or false
+	local shift = shift or 0
 
 	if(useCuda) then
 		ti11 = torch.CudaTensor(tl:size(1),tl:size(2),labelDim)
@@ -199,8 +201,28 @@ function Util:sparse2dense(tl,labelDim,useCuda,shift) --the second arg is for th
 	for i = 1,tl:size(1) do
 		for j = 1,tl:size(2) do
 			local v = tl[i][j]
-			if(shift) then v = v+1 end
-			ti11[i][j][v] = 1
+			ti11[i][j][v+shift] = 1
+		end
+	end
+	return ti11 
+end
+
+function Util:sparse2dense3d(tl,labelDim,useCuda,shift) --the second arg is for the common use case that we pass it zero-indexed values
+	local ti11
+	local shift = shift or 0
+
+	if(useCuda) then
+		ti11 = torch.CudaTensor(tl:size(1),tl:size(2),tl:size(3),labelDim)
+	else
+		ti11 = torch.Tensor(tl:size(1),tl:size(2),tl:size(3),labelDim)
+	end
+	ti11:zero()
+	for i = 1,tl:size(1) do
+		for j = 1,tl:size(2) do
+			for k = 1,tl:size(3) do
+				local v = tl[i][j][k]
+				ti11[i][j][k][v+shift] = 1
+			end
 		end
 	end
 	return ti11 

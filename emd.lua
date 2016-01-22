@@ -53,10 +53,17 @@ function optim.emd(opfunc, x, config, state)
    local useTemp = config.extraEntropyWeight and config.extraEntropyWeight > 0.0 
    state.evalCounter = state.evalCounter or 0
    local nevals = state.evalCounter
-   assert(not nesterov or (mom > 0 and damp == 0), "Nesterov momentum requires a momentum and zero dampening")
+   assert((not nesterov) or (mom > 0 and damp == 0), "Nesterov momentum requires a momentum and zero dampening")
 
    -- (1) evaluate f(x) and df/dx
    local fx,dfdx = opfunc(x)
+
+   if(checkNans) then
+      local inf = 1/0
+      local err = dfdx:eq(inf):any()
+      if(err) then print('max grad term = '..dfdx:max()) end
+      assert(not err,'infinite gradient')
+   end
 
    -- (2) weight decay with single or individual parameters
    if wd ~= 0 then
