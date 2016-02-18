@@ -66,14 +66,17 @@ end
 
 
 function MapReduce:genericBackward(operator,input, gradOutput)
-	local db = self.reducer:forward(self.mappedAndReshaped)
-	self.reducer:backward(self.mappedAndReshaped,db:clone():fill(1.0))
 	operator(self.reducer,self.mappedAndReshaped,gradOutput)
 	local reducerGrad = self.reducer.gradInput
-	local reshapedReducerGrad = reducerGrad:view(self.sizes3)
+	
+	if reducerGrad:isContiguous() then
+		self.reshapedReducerGrad = reducerGrad:view(self.sizes3)
+	else
+		self.reshapedReducerGrad = self.reshapedReducerGrad or reducerGrad:clone()
+		self.reshapedReducerGrad:resizeAs(reducerGrad):copy(reducerGrad):resize(self.sizes3) 
+	end
 
-
-	operator(self.mapper,self.reshapedInput,reshapedReducerGrad) 
+	operator(self.mapper,self.reshapedInput,self.reshapedReducerGrad) 
 	local mapperGrad = self.mapper.gradInput
 
 	self.gradInput = (mapperGrad:dim() > 0) and mapperGrad:view(self.inputSize) or nil --some modules return nil from backwards, such as the lookup table
