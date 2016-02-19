@@ -21,6 +21,10 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
      self.optInfo = optInfo
      self.minibatchsize = trainingOptions.minibatchsize
 
+    self.gradBound = trainingOptions.gradientClip
+    self.clampGradient = trainingOptions.gradientClip or false
+
+
     local parameters
     local gradParameters
 
@@ -115,7 +119,6 @@ function MyOptimizer:trainBatch(inputs, targets)
     local function fEval(x)
         if parameters ~= x then parameters:copy(x) end
         self.model:zeroGradParameters()
-
         local output = self.model:forward(inputs)
         local err = self.criterion:forward(output, targets)
         local df_do = self.criterion:backward(output, targets)
@@ -126,6 +129,13 @@ function MyOptimizer:trainBatch(inputs, targets)
             local l2 = self.l2s[i]
             for j = 1,#self.params[i] do
                 self.grads[i][j]:add(l2,self.params[i][j])
+            end
+        end
+
+        if(self.clampGradient) then
+            local norm = gradParameters:norm()
+            if(norm > self.gradBound) then
+                gradParameters:div(self.gradBound)
             end
         end
 

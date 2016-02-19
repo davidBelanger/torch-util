@@ -23,7 +23,30 @@ function Util:tableAsRowStr(t)
 	end	
 	str = str.."\n"
 	return str
+end
 
+--this returns the diagonal of 
+function Util:diagByReference(x)
+	assert(x:isContiguous())
+	if(x:dim() == 2) then
+		return Util:diagByReference2(x)
+	elseif(x:dim() == 3) then
+		return Util:diagByReference3(x)
+	else
+		assert(false,'only supported for 2d or 3d tensors')
+	end
+end
+
+function Util:diagByReference2(x)
+	return torch.Tensor(x:storage(),1,n,n+1)
+end
+
+function Util:diagByReference3(x)
+	local b = x:size(1)
+	local n = x:size(2)
+	local sizes = torch.LongStorage({b,n})
+	local strides = torch.LongStorage({n*n,n+1})
+	return torch.Tensor(x:storage(),1,sizes,strides)
 end
 
 function Util:printRow(t)
