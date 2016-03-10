@@ -28,7 +28,7 @@ function Print:prettyPrint(data)
 		print(data:size())
 	else
 		for k,v in ipairs(data) do
-			print(v:size())
+			self:prettyPrint(v)
 		end
 	end
 end
