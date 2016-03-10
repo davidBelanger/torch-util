@@ -10,3 +10,4 @@ function LookupTableWithGrad:updateGradInput(input,gradInput)
 	return self.gradInput
 end
 
+	
