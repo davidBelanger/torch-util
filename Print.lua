@@ -30,8 +30,8 @@ function Print:prettyPrint(data)
 	if(torch.isTensor(data) or torch.isStorage(data)) then
 		print(data:size())
 	else
-		for k,v in pairs(data) do
-			self:prettyPrint(v:size())
+		for k,v in ipairs(data) do
+			self:prettyPrint(v)
 		end
 	end
 end
