@@ -1,6 +1,7 @@
 local Print, parent = torch.class('nn.Print', 'nn.Module')
 
-function Print:__init(printInput,printGradOutput)
+function Print:__init(printInput,printGradOutput,msg)
+   self.msg = msg or ''
 	self.printInput = printInput
 	self.printGradOutput = printGradOutput
 end
@@ -8,6 +9,7 @@ end
 function Print:updateOutput(input)
    self.output = input
    if(self.printInput) then
+         print(self.msg)
    		print('Input:')
    		self:prettyPrint(input)
    end
@@ -17,6 +19,7 @@ end
 function Print:updateGradInput(input, gradOutput)
    self.gradInput = gradOutput
    if(self.printGradOutput) then
+         print(self.msg)
    		print('Grad Input:')
    		self:prettyPrint(gradOutput)
    end
@@ -24,11 +27,11 @@ function Print:updateGradInput(input, gradOutput)
 end
 
 function Print:prettyPrint(data)
-	if(torch.isTensor(data)) then
+	if(torch.isTensor(data) or torch.isStorage(data)) then
 		print(data:size())
 	else
-		for k,v in ipairs(data) do
-			print(v:size())
+		for k,v in pairs(data) do
+			self:prettyPrint(v:size())
 		end
 	end
 end
