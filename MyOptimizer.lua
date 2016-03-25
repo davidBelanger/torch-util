@@ -8,10 +8,10 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
     local model_utils = require 'model_utils'
 
      assert(trainingOptions)
-	 assert(optInfo)
+     assert(optInfo)
      self.structured = structured or false
-	 self.model = model
-	 self.optState = optInfo.optState	
+     self.model = model
+     self.optState = optInfo.optState	
      self.optConfig = optInfo.optConfig
      self.optimMethod = optInfo.optimMethod
      self.regularization = optInfo.regularization
@@ -20,6 +20,9 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
      self.minibatchsize = trainingOptions.minibatchsize
+     self.assert = optInfo.assert
+     self.useGradientNoise = trainingOptions.gradientNoiseScale and trainingOptions.gradientNoiseScale > 0
+     self.gradientNoiseScale = trainingOptions.gradientNoiseScale
 
     self.gradBound = trainingOptions.gradientClip
     self.clampGradient = trainingOptions.gradientClip or false
@@ -28,11 +31,17 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
     local parameters
     local gradParameters
 
-    if(Util:isArray(modules_to_update)) then
-            parameters, gradParameters = model_utils.combine_all_parameters(unpack(modules_to_update))
+    if(not Util:isArray(modules_to_update)) then
+        parameters, gradParameters = modules_to_update:getParameters() 
     else
-            parameters, gradParameters = modules_to_update:getParameters()
+        local cont = nn.Container()
+        for _, m in pairs(modules_to_update) do
+            cont:add(m)
+        end
+        parameters, gradParameters = cont:getParameters()
+--        parameters, gradParameters =  model_utils.combine_all_parameters(unpack(modules_to_update)) --
     end
+
     self.parameters = parameters
     self.gradParameters = gradParameters
 
@@ -47,7 +56,7 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
             table.insert(self.l2s,l2)
     end
     self.numRegularizers = #self.l2s
-
+    self.numIters = 0
 
     self.cuda = optInfo.cuda
      if(optInfo.useCuda) then
@@ -61,7 +70,6 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
             hook.hook(0)
         end
     end
-
 end
 
 function MyOptimizer:train(batchSampler)
@@ -71,17 +79,15 @@ function MyOptimizer:train(batchSampler)
      local epochSize = batchesPerEpoch*self.minibatchsize
      local numProcessed = 0
      
-    local i = 1
+    local i = 0
     while i < self.trainingOptions.numEpochs and (not self.checkForConvergence or not self.optInfo.converged) do
         self.totalError:zero()
+        i = i + 1
+        self.numIters = i
         for j = 1,batchesPerEpoch do
     	    local minibatch_targets,minibatch_inputs = batchSampler()
-            if(minibatch_targets) then
-                numProcessed = numProcessed + minibatch_targets:nElement() --this reports the number of 'training examples.' If doing sequence tagging, it's the number of total timesteps, not the number of sequences. 
-            else
-                --in some cases, the targets are actually part of the inputs with some weird table structure. Need to account for this.
-                numProcessed = numProcessed + self.minibatchsize
-            end
+            --in some cases, the targets are actually part of the inputs with some weird table structure. Need to account for this.
+            numProcessed = numProcessed + self.minibatchsize
             self:trainBatch(minibatch_inputs,minibatch_targets) 
         end
 
@@ -102,12 +108,16 @@ function MyOptimizer:train(batchSampler)
                 hook.hook(i)
             end
 	   end
-       i = i + 1
+
     end
 end
 
 function MyOptimizer:postEpoch()
     --this is to be overriden by children of MyOptimizer
+end
+
+function  MyOptimizer:preBatch()
+    --optional abstract method to be implemented by children
 end
 
 function MyOptimizer:trainBatch(inputs, targets)
@@ -116,6 +126,9 @@ function MyOptimizer:trainBatch(inputs, targets)
 
     local parameters = self.parameters
     local gradParameters = self.gradParameters
+
+    self:preBatch()
+
     local function fEval(x)
         if parameters ~= x then parameters:copy(x) end
         self.model:zeroGradParameters()
@@ -124,7 +137,7 @@ function MyOptimizer:trainBatch(inputs, targets)
         local df_do = self.criterion:backward(output, targets)
         self.model:backward(inputs, df_do) 
 
-        --note we don't bother adding regularizer to the objective calculation. who selects models on the objective anyway?
+        --note we don't bother adding regularizer to the objective calculation. 
         for i = 1,self.numRegularizers do
             local l2 = self.l2s[i]
             for j = 1,#self.params[i] do
@@ -132,21 +145,26 @@ function MyOptimizer:trainBatch(inputs, targets)
             end
         end
 
+        --todo: scale this by the current norm of the params or something?
+        if(self.useGradientNoise) then
+            self.noise = self.noise or gradParameters:clone()
+            torch.randn(self.noise,self.noise:size())
+            local scale = self.gradientNoiseScale/math.sqrt(self.numIters)
+            gradParameters:add(scale,self.noise)
+        end
+
         if(self.clampGradient) then
             local norm = gradParameters:norm()
             if(norm > self.gradBound) then
-                gradParameters:div(self.gradBound)
+                gradParameters:mul(self.gradBound/norm)
             end
         end
 
         self.totalError[1] = self.totalError[1] + err
-        
         return err, gradParameters
     end
-
     self.optimMethod(fEval, parameters, self.optConfig, self.optState)
-
-
+    if(self.assert) then assert(parameters:eq(parameters):all(),'NANs in parameters after gradient step') end
     return err
 end
 

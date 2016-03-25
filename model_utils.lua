@@ -1,6 +1,5 @@
---this is modified from https://github.com/karpathy/char-rnn
+--this is from https://github.com/karpathy/char-rnn
 
-require 'torch'
 local model_utils = {}
 
 function model_utils.num_parameters(...)

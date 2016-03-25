@@ -110,7 +110,7 @@ function Util:loadReverseMap(file)
 	return map
 end
 
-function Util:CopyTable(table)
+function Util:copyTable(table)
 	copy = {}
 	for j,x in pairs(table) do copy[j] = x end
 	return copy
