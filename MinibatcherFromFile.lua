@@ -25,7 +25,8 @@ function MinibatcherFromFile:__init(file,batchSize,cuda,shuffle)
 			self.labels = loaded.labels_pad
 			self.data = loaded.inputs_pad
 		end
-		assert(self.labels:size(1) == self.data:size(1))
+		self.useLabels = labels:dim() >  0
+		if(self.useLabels) then assert(self.labels:size(1) == self.data:size(1)) end
 		self.numRowsValue = self.data:size(1)
 		self.curStart = 1
 		self.curStartSequential = 1
@@ -41,7 +42,7 @@ function MinibatcherFromFile:shuffle()
 	if(self.isSparse) then return self.sparseBatcher:shuffle() end
 	if(self.doShuffle) then
 		 local inds = torch.randperm(self.labels:size(1)):long()
-		 self.labels = self.labels:index(1,inds)
+		 if(self.useLabels) then self.labels = self.labels:index(1,inds) end
 		 self.data = self.data:index(1,inds)
 		 self.curStart = 1
 		 self.curStartSequential = 1
@@ -61,7 +62,7 @@ function  MinibatcherFromFile:getBatch()
 		self:shuffle()
 	end
 
-	local batch_labels = self.labels:narrow(1,startIdx,endIdx-startIdx+1)
+	local batch_labels = self.useLabels and self.labels:narrow(1,startIdx,endIdx-startIdx+1) or nil
 	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
 	local num_actual_data = self.batchSize
 	if(endIdx > self.unpadded_len) then
@@ -98,7 +99,7 @@ function  MinibatcherFromFile:getBatchSequential()
 	num_actual_data = math.min(self.unpadded_len - startIdx,endIdx - startIdx) + 1
 
 
-	local batch_labels = self.labels:narrow(1,startIdx,endIdx-startIdx+1)
+	local batch_labels = self.useLabels and self.labels:narrow(1,startIdx,endIdx-startIdx+1) or nil
 	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
 
 	assert(num_actual_data <= batch_labels:size(1))
