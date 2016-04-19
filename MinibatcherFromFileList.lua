@@ -28,15 +28,18 @@ function  MinibatcherFromFileList:getBatch()
 	return self.preprocess(self.batches[idx[1]]:getBatch())
 end
 
-function MinibatcherFromFileList:getAllBatches()
+function MinibatcherFromFileList:getAllBatches(dontPreprocess)
 	local t = {}	
-
 	for _,b in ipairs(self.batches) do
 		while(true) do
 			local lab,data,unpadded_len = b:getBatchSequential()
 			if(data == nil) then break end
-			local a,b,c = self.preprocess(lab,data,unpadded_len)
-			table.insert(t,{a,b,c})
+			if(dontPreprocess) then
+				table.insert(t,{lab,data,unpadded_len})
+			else
+				local a,b,c = self.preprocess(lab,data,unpadded_len)
+				table.insert(t,{a,b,c})
+			end
 		end
 	end
 	return t

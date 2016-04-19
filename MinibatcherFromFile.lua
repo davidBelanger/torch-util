@@ -13,26 +13,39 @@ function MinibatcherFromFile:__init(file,batchSize,cuda,shuffle)
 		self.sparseBatcher = SparseMinibatcherFromFile(loadedData,batchSize,cuda,shuffle) 
 	else
 
-		local loaded = LabeledDataFromFile(loadedData,cuda,batchSize) 
+		local pad = false
+		local loaded = LabeledDataFromFile(self:putIntoSchema(loadedData),pad,batchSize) 
 
 		self.unpadded_len = loaded.unpadded_len
 		assert(self.unpadded_len ~= nil)
 
 		if(cuda) then
-			self.labels = loaded.labels_pad:cuda()
-			self.data = loaded.inputs_pad:cuda()
+			self.labels =  Util:deep_apply(loaded.labels, function(t) return t:cuda() end)
+			self.data = Util:deep_apply(loaded.inputs, function(t) return t:cuda() end)
 		else
-			self.labels = loaded.labels_pad
-			self.data = loaded.inputs_pad
+			self.labels = loaded.labels
+			self.data = loaded.inputs
 		end
-		self.useLabels = labels:dim() >  0
-		if(self.useLabels) then assert(self.labels:size(1) == self.data:size(1)) end
-		self.numRowsValue = self.data:size(1)
+		self.useLabels = Util:find_first_tensor(self.labels):dim() >  0
+
+		if(self.useLabels) then assert(Util:find_first_tensor(self.labels):size(1) == Util:find_first_tensor(self.data):size(1)) end
+		self.numRowsValue = Util:find_first_tensor(self.data):size(1)
 		self.curStart = 1
 		self.curStartSequential = 1
 	end
 end
 
+function MinibatcherFromFile:putIntoSchema(loaded)
+	if(loaded.data) then
+		return loaded
+	else
+		local toReturn = {
+			labels = loaded[1],
+			data = loaded[2]
+		}
+		return toReturn
+	end
+end
 function MinibatcherFromFile:numRows()
 	if(self.isSparse) then return self.sparseBatcher.numRows end
 	return self.numRowsValue
@@ -49,6 +62,10 @@ function MinibatcherFromFile:shuffle()
 	end
 end
 
+function MinibatcherFromFile:narrow(data,dim,start,len)
+	return Util:deep_apply(data,function(t) return t:narrow(dim,start,len) end) 
+end
+
 function  MinibatcherFromFile:getBatch()
 	if(self.isSparse) then return self.sparseBatcher:getBatch() end
 
@@ -62,13 +79,13 @@ function  MinibatcherFromFile:getBatch()
 		self:shuffle()
 	end
 
-	local batch_labels = self.useLabels and self.labels:narrow(1,startIdx,endIdx-startIdx+1) or nil
-	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
+	local batch_labels = self.useLabels and self:narrow(self.labels,1,startIdx,endIdx-startIdx+1) or nil
+	local batch_data = self:narrow(self.data,1,startIdx,endIdx-startIdx+1)
 	local num_actual_data = self.batchSize
 	if(endIdx > self.unpadded_len) then
 		num_actual_data = self.unpadded_len - startIdx +1 
 	end
-	
+
 	return batch_labels,batch_data, num_actual_data
 end
 
@@ -98,10 +115,9 @@ function  MinibatcherFromFile:getBatchSequential()
 	end
 	num_actual_data = math.min(self.unpadded_len - startIdx,endIdx - startIdx) + 1
 
+	local batch_labels = self.useLabels and self:narrow(self.labels,1,startIdx,endIdx-startIdx+1) or nil
+	local batch_data = self:narrow(self.data,1,startIdx,endIdx-startIdx+1)
 
-	local batch_labels = self.useLabels and self.labels:narrow(1,startIdx,endIdx-startIdx+1) or nil
-	local batch_data = self.data:narrow(1,startIdx,endIdx-startIdx+1)
-
-	assert(num_actual_data <= batch_labels:size(1))
+	assert(num_actual_data <= batch_data:size(1))
 	return batch_labels,batch_data, num_actual_data
 end

@@ -15,6 +15,14 @@ function Util:splitByDelim(str,delim,convertFromString)
     return t
 end
 
+function Util:find_first_tensor(s)
+	if(torch.isTensor(s)) then return s end
+	for k,v in pairs(s) do
+		return self:find_first_tensor(v)
+	end
+	error('should never get here')
+end
+
 function Util:tableAsRowStr(t)
 	local num = #t
 	local str = ""
@@ -261,4 +269,101 @@ function Util:isArray(t)
     return true
 end
 
+
+
+function Util:deep_copy(t,s) 
+	return self:deep_apply_inplace_two_arg(t,s,function(t1,s1) return t1:resizeAs(s1):copy(s1) end) 
+end
+
+function Util:deep_clone(s) 
+	return self:deep_apply(s,function(v) return v:clone() end) 
+end
+
+
+--some of the stuff below is based on deep_copy from https://github.com/rosejn/lua-util/blob/master/util/init.lua
+--this just does a dfs on a nested table to find the first tensor
+
+--s = source
+function Util:deep_apply(s,func)
+    assert(s)
+  	if(torch.isTensor(s)) then return func(s) end
+
+    local mt = getmetatable(s)
+    local res = {}
+
+    for k,v in pairs(s) do
+        if type(v) == 'table' or torch.isTensor(v) then
+           res[k] = self:deep_apply(s[k],func)
+        else
+           error('should not be here')
+        end
+    end
+
+    setmetatable(res,mt)
+    return res
+end
+
+--t,s = target, source
+function Util:deep_apply_inplace(t,func)
+  	if(torch.isTensor(t)) then 
+  		func(t)
+  		return
+  	end
+
+    assert(t)
+
+    for k,v in pairs(t) do
+        if type(v) == 'table' or torch.isTensor(v) then
+           self:deep_apply_inplace(v,func)
+        else
+           error('should not be here')
+        end
+    end
+end
+
+
+--t,s = target, source
+function Util:deep_apply_inplace_two_arg(t,s,func)
+  	if(torch.isTensor(s)) then 
+  		func(t,s)
+  		return
+  	end
+
+    assert(t)
+    assert(s)
+
+    for k,v in pairs(t) do
+        if type(v) == 'table' or torch.isTensor(v) then
+           self:deep_apply_inplace_two_arg(v,s[k],func)
+        else
+           error('should not be here')
+        end
+    end
+end
+
+
+
+--you apply the mapper to each child, and a parent applies the reducer to the values from all of its children
+function Util:deep_map_reduce(t,s,mapper,reducer)
+    if(torch.isTensor(s)) then 
+  		reducer(t,{mapper(s)})
+  		return
+  	end
+
+    assert(s)
+    assert(t)
+
+    local tab = {}
+    for k,v in pairs(s) do
+        if type(v) == 'table' then
+        	error('this does not yet work for tables of depth > 1: the solution is to pre-allocate the reducer outputs and do everything in place')
+        elseif torch.isTensor(v) then
+        	table.insert(tab,mapper(v))
+        else
+           error('should not be here')
+        end
+    end
+
+   reducer(t,tab)
+end
 
