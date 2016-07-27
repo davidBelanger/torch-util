@@ -54,9 +54,9 @@ end
 function MinibatcherFromFile:shuffle()
 	if(self.isSparse) then return self.sparseBatcher:shuffle() end
 	if(self.doShuffle) then
-		 local inds = torch.randperm(self.labels:size(1)):long()
-		 if(self.useLabels) then self.labels = self.labels:index(1,inds) end
-		 self.data = self.data:index(1,inds)
+		 local inds = torch.randperm(self.numRowsValue):long()
+		 if(self.useLabels) then self.labels = Util:deep_apply(self.labels,function(t) return t:index(1,inds) end) end
+		 self.data = Util:deep_apply(self.data,function(t) return t:index(1,inds) end)
 		 self.curStart = 1
 		 self.curStartSequential = 1
 	end

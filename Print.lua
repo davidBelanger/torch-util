@@ -11,7 +11,7 @@ function Print:updateOutput(input)
    self.output = input
    if(self.printInput) then
          print(self.msg)
-   		--print('Input:')
+   		print('Input:')
    		self:prettyPrint(input)
    end
    return self.output
@@ -21,7 +21,7 @@ function Print:updateGradInput(input, gradOutput)
    self.gradInput = gradOutput
    if(self.printGradOutput) then
          print(self.msg)
-   	--	print('Grad Output:')
+   		print('Grad Output:')
    		self:prettyPrint(gradOutput)
    end
    return self.gradInput
