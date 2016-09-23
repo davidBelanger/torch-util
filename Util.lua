@@ -270,6 +270,30 @@ function Util:isArray(t)
 end
 
 
+-- This takes a 1D tensor (representing a single scalar per minibatch element) 
+-- and expands it to have target_shape where everything is tiled
+-- across the non-minibatch dimension. 
+function Util:expand_to_shape(t,target_shape)
+	rank = table.getn(target_shape)
+
+	expanded_sizes = torch.LongStorage(rank):fill(1)
+	expanded_sizes[1] = target_shape[1]	
+	t = t:view(expanded_sizes):expand(unpack(target_shape))
+	return t
+end
+
+-- This takes a nngraph node that returns a 1D tensor (representing a single scalar per minibatch element) 
+-- and expands it to have target_shape where everything is tiled
+-- across the non-minibatch dimension. 
+-- Return value is another nngraph node
+function Util:expand_to_shape_nn(t,target_shape)
+	rank = table.getn(target_shape)
+	for i = 2,rank do
+		t = nn.Replicate(target_shape[i], i)(t)
+	end
+	return t
+end
+
 
 function Util:deep_copy(t,s) 
 	return self:deep_apply_inplace_two_arg(t,s,function(t1,s1) return t1:resizeAs(s1):copy(s1) end) 

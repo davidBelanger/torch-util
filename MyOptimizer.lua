@@ -19,7 +19,6 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
      self.totalError = torch.Tensor(1):zero()
      self.checkForConvergence = optInfo.converged ~= nil
      self.optInfo = optInfo
-     self.minibatchsize = trainingOptions.minibatchsize
      self.assert = optInfo.assert
      self.useGradientNoise = trainingOptions.gradientNoiseScale and trainingOptions.gradientNoiseScale > 0
      self.gradientNoiseScale = trainingOptions.gradientNoiseScale
@@ -48,20 +47,17 @@ function MyOptimizer:__init(model,modules_to_update,criterion, trainingOptions,o
     self.l2s = {}
     self.params = {}
     self.grads = {}
-    for i = 1,#self.regularization.params do
-            local params,grad = self.regularization.params[i]:parameters()
-            local l2 = self.regularization.l2[i]
-            table.insert(self.params,params)
-            table.insert(self.grads,grad)
-            table.insert(self.l2s,l2)
+    if(self.regularization) then
+        for i = 1,#self.regularization.params do
+                local params,grad = self.regularization.params[i]:parameters()
+                local l2 = self.regularization.l2[i]
+                table.insert(self.params,params)
+                table.insert(self.grads,grad)
+                table.insert(self.l2s,l2)
+        end
     end
     self.numRegularizers = #self.l2s
     self.numIters = 0
-
-    self.cuda = optInfo.cuda
-     if(optInfo.useCuda) then
-        self.totalError:cuda()
-    end
 
      self.criterion = criterion
     for hookIdx = 1,#self.trainingOptions.epochHooks do
@@ -75,7 +71,11 @@ end
 function MyOptimizer:train(batchSampler)
 	 local prevTime = sys.clock()
      local batchesPerEpoch = self.trainingOptions.batchesPerEpoch
-     local tst_lab,tst_data = batchSampler()
+     local tst_lab, tst_data = batchSampler()
+     self.minibatchsize = self.minibatchsize or tst_lab:size(1)
+
+     self.totalError:typeAs(tst_lab)
+
      local epochSize = batchesPerEpoch*self.minibatchsize
      local numProcessed = 0
      

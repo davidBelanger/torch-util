@@ -27,22 +27,18 @@ function Print:updateGradInput(input, gradOutput)
    return self.gradInput
 end
 
-function Print:prettyPrint(data)
-   if(self.printValues) then
-      self.printValues(data)
-   else
-      self:prettyPrintRecurse(data)
-   end
-end
 
-
-function Print:prettyPrintRecurse(data)
+function Print:prettyPrint(data, printValues)
    if(torch.isTensor(data) or torch.isStorage(data)) then
+      if(self.printValues) then
+         print(data)
+      else
          print(data:size())
+      end
    else
       print('{')
       for k,v in ipairs(data) do
-         self:prettyPrintRecurse(v)
+         self:prettyPrint(v)
       end
       print('}')
 
