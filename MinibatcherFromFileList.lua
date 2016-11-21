@@ -1,5 +1,5 @@
 local MinibatcherFromFileList = torch.class('MinibatcherFromFileList')
-
+require 'MinibatcherFromFile'
 function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess,shuffle)
 	self.shuffle = shuffle
 	if(not preprocess) then
@@ -10,7 +10,17 @@ function MinibatcherFromFileList:__init(fileList,batchSize,cuda,preprocess,shuff
 	local counts = {}
 	self.debugMode = false
 	print(string.format('reading file list from %s',fileList))
-	for file in io.lines(fileList) do
+
+	local list
+	if(torch.type(fileList) == "string") then
+		list = {}
+		for file in io.lines(fileList) do
+			table.insert(list,file)
+		end
+	else
+		list = fileList
+	end
+	for _, file in ipairs(list) do
 		local batch  = MinibatcherFromFile(file,batchSize,cuda,shuffle)
 		table.insert(counts,batch:numRows())
 		table.insert(self.batches,batch)
