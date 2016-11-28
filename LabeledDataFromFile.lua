@@ -27,23 +27,25 @@ function LabeledDataFromFile:padTensor(input,blocksize)
 	local sizes = input:size()
 	sizes[1] = sizes[1] + padding
 	local paddedData = torch.Tensor(sizes)
-	local actualData = self:narrow(paddedData,1,1,len)
+	local actualData = paddedData:narrow(1,1,len)
 	actualData:copy(input)
 	if(len_pad > len) then
-		self:narrow(paddedData,1,len+1,padding):fill(1)
+		paddedData:narrow(1,len+1,padding):fill(1000) --todo: put back
 	end
 	return input,paddedData
 end
 
 
-function LabeledDataFromFile:narrow(data,dim,start,len)
-	if(torch.isTensor(data)) then
-		return data:narrow(dim,start,len)
-	else
-		local result = {}
-		for k,v in pairs(data) do
-			result[k] = self:narrow(v,dim,start,len)
-		end
-		return result
-	end
-end
+-- function LabeledDataFromFile:narrow(data,dim,start,len)
+-- 	print('i',dim,start,len)
+
+-- 	if(torch.isTensor(data)) then
+-- 		return data:narrow(dim,start,len)
+-- 	else
+-- 		local result = {}
+-- 		for k,v in pairs(data) do
+-- 			result[k] = self:narrow(v,dim,start,len)
+-- 		end
+-- 		return result
+-- 	end
+-- end

@@ -9,7 +9,7 @@ function OnePassMiniBatcherFromFileList:__init(fileList,batchSize,useCuda,prepro
 	self.lazyPreprocess = lazyPreprocess
 	
 	self.all_batches = self.batcher:getAllBatches(lazyPreprocess)
-	
+
 	self.tbi = 0
 	self.called = false
 end
