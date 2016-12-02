@@ -30,7 +30,7 @@ function LabeledDataFromFile:padTensor(input,blocksize)
 	local actualData = paddedData:narrow(1,1,len)
 	actualData:copy(input)
 	if(len_pad > len) then
-		paddedData:narrow(1,len+1,padding):fill(1000) --todo: put back
+		paddedData:narrow(1,len+1,padding):copy(input:narrow(1,1,padding)) --pad the end with a few examples from the beginning
 	end
 	return input,paddedData
 end
