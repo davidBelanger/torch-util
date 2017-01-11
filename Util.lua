@@ -394,7 +394,7 @@ function Util:deep_map_reduce(t,s,mapper,reducer)
 end
 
 --target_count should be a target for all parameters, both weights and biases. For example, from a call to getParameters()
-local function get_weights_only(network,target_count)
+function Util:get_weights_only(network,target_count)
     local num = 0
     -- local all_parameters = {}
     local seen = {}
