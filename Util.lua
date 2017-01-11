@@ -99,6 +99,7 @@ end
 
 
 function Util:loadMap(file)
+	assert(file)
 	print(string.format('reading from %s',file))
 	local map = {}
 	for s in io.lines(file) do
@@ -108,6 +109,7 @@ function Util:loadMap(file)
 end
 
 function Util:loadReverseMap(file)
+	assert(file)
 	print(string.format('reading from %s',file))
 	local map = {}
 	local cnt = 1
@@ -391,3 +393,39 @@ function Util:deep_map_reduce(t,s,mapper,reducer)
    reducer(t,tab)
 end
 
+--target_count should be a target for all parameters, both weights and biases. For example, from a call to getParameters()
+local function get_weights_only(network,target_count)
+    local num = 0
+    -- local all_parameters = {}
+    local seen = {}
+    local weights = {}
+    local function get_weights(module)
+        if(module.weight) then
+            num = num + module.weight:nElement()
+            table.insert(weights,module.weight)
+            -- table.insert(all_parameters,module.weight)
+        end
+        if(module.bias) then
+            num = num + module.bias:nElement()
+            -- table.insert(all_parameters,module.bias)
+        end
+    end
+    local function get_weights_recurse(module)
+
+        if(module.modules and (not seen[module])) then 
+            for _, m in ipairs(module.modules) do
+                get_weights(m)
+                get_weights_recurse(m)
+            end
+        end
+        seen[module] = true
+    end
+
+    
+    network:applyToModules(get_weights_recurse)
+
+    if(target_count) then
+    	assert(num ==  target_count,num.." vs. "..target_count)
+    end
+    return weights
+end
