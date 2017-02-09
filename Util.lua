@@ -429,3 +429,35 @@ function Util:get_weights_only(network,target_count)
     end
     return weights
 end
+
+function Util:get_modules_with_field(network,field_name,index_by_value)
+    local num = 0
+    -- local all_parameters = {}
+    local seen = {}
+    local weights = {}
+    local function get_weights(module)
+    	local t = torch.typename(module)
+        if(module[field_name]) then
+        	if(index_by_value) then
+	            weights[module[field_name]] = module
+	        else
+	        	table.insert(weights,module)
+	        end
+	    end
+     end
+    local function get_weights_recurse(module)
+
+        if(module.modules and (not seen[module])) then 
+            for _, m in ipairs(module.modules) do
+                get_weights(m)
+                get_weights_recurse(m)
+            end
+        end
+        seen[module] = true
+    end
+
+    
+    network:applyToModules(get_weights_recurse)
+
+    return weights
+end
