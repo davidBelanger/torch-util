@@ -298,7 +298,7 @@ end
 
 
 function Util:deep_copy(t,s) 
-	return self:deep_apply_inplace_two_arg(t,s,function(t1,s1) return t1:resizeAs(s1):copy(s1) end) 
+	return self:deep_apply_inplace_two_arg(t,s,function(t1,s1) return t1:resize(s1:size()):copy(s1) end) 
 end
 
 function Util:deep_clone(s) 
