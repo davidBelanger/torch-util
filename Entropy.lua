@@ -6,13 +6,13 @@ local eps = 1e-12
 --This doesn't assume that each element of input is a single bernoulli probability
 --instead, it assumes that each row indexes a distribution. e.g., each row is for a minibatch element. it returns the entropy of each row.
 
---todo: either pass it some flag if you're treating the whole input tensor as a single distribution
+--todo: pass it some flag if you're treating the whole input tensor as a single distribution
 function Entropy:__init()
    parent.__init(self)
 end
 
 function Entropy:updateOutput(input)
-   -- log(input) * input (and sum over all but the minibatch dimension)
+   -- -log(input) * input (and sum over all but the minibatch dimension)
    self.term1 = self.term1 or input.new()
    
    self.term1:resizeAs(input)

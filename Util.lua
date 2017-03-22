@@ -411,7 +411,7 @@ function Util:get_weights_only(network,target_count)
         end
     end
     local function get_weights_recurse(module)
-
+    	get_weights(module)
         if(module.modules and (not seen[module])) then 
             for _, m in ipairs(module.modules) do
                 get_weights(m)
