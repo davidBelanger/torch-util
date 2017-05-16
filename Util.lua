@@ -394,6 +394,7 @@ function Util:deep_map_reduce(t,s,mapper,reducer)
 end
 
 --target_count should be a target for all parameters, both weights and biases. For example, from a call to getParameters()
+
 function Util:get_weights_only(network,target_count)
     local num = 0
     -- local all_parameters = {}
@@ -407,6 +408,42 @@ function Util:get_weights_only(network,target_count)
         end
         if(module.bias) then
             num = num + module.bias:nElement()
+            -- table.insert(all_parameters,module.bias)
+        end
+    end
+    local function get_weights_recurse(module)
+    	get_weights(module)
+        if(module.modules and (not seen[module])) then 
+            for _, m in ipairs(module.modules) do
+                get_weights(m)
+                get_weights_recurse(m)
+            end
+        end
+        seen[module] = true
+    end
+
+    
+    network:applyToModules(get_weights_recurse)
+
+    if(target_count) then
+    	assert(num ==  target_count,num.." vs. "..target_count)
+    end
+    return weights
+end
+
+function Util:get_biases_only(network,target_count)
+    local num = 0
+    -- local all_parameters = {}
+    local seen = {}
+    local weights = {}
+    local function get_weights(module)
+        if(module.bias) then
+            num = num + module.bias:nElement()
+            table.insert(weights,module.bias)
+            -- table.insert(all_parameters,module.weight)
+        end
+        if(module.weight) then
+            num = num + module.weight:nElement()
             -- table.insert(all_parameters,module.bias)
         end
     end
